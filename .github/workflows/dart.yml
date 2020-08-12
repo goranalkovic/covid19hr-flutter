@@ -1,0 +1,49 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image:  google/dart:latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: subosito/flutter-action@v1
+      with:
+        channel: 'alpha'
+        
+    # Get flutter dependencies.
+    - run: flutter pub get
+    
+    # Check for any formatting issues in the code.
+    - run: flutter format --set-exit-if-changed .
+    
+    # Statically analyze the Dart code for any errors.
+    - run: flutter analyze .
+    
+    # Build app.
+    - run: flutter build web
+  
+    # Upload generated apk to the artifacts.
+    - uses: actions/upload-artifact@v2
+      with:
+        name: export
+        path: build\web
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
