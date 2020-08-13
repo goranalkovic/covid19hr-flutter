@@ -63,6 +63,6 @@ class Covid19Provider extends ChangeNotifier {
   }
 
   Covid19Provider() {
-    // updateData();
+    updateData();
   }
 }

@@ -57,7 +57,8 @@ class DailyStatusCard extends StatelessWidget {
                 crossFadeState: currentNumber == null
                     ? CrossFadeState.showFirst
                     : CrossFadeState.showSecond,
-                duration: Duration(milliseconds: 500),
+                duration: Duration(milliseconds: 300),
+                reverseDuration: Duration(milliseconds: 180),
                 firstChild: Shimmer(
                   direction: ShimmerDirection.fromLeftToRight(),
                   color: color,
