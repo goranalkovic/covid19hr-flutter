@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:covid19hr/app_logo.dart';
+import 'package:covid19hr/appstate.dart';
 import 'package:covid19hr/data_loading.dart';
 import 'package:covid19hr/error_screen.dart';
 import 'package:covid19hr/footer.dart';
@@ -21,6 +22,8 @@ import 'package:flinq/flinq.dart';
 import 'package:infinity_ui/infinity_ui.dart';
 
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +61,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'COVID-19 podaci',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(body: HomePage()),
+      home: ChangeNotifierProvider(
+        create: (_) => Covid19Provider(),
+        child: Scaffold(body: HomePage()),
+      ),
       theme: ThemeData.light().copyWith(
         primaryColor: Colors.deepPurple,
         textTheme: lightTextTheme,
@@ -81,7 +87,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends HookWidget {
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -91,43 +97,28 @@ class HomePage extends HookWidget {
     deathsColor = isDark ? deathsColorDark : deathsColorLight;
     activeColor = isDark ? activeColorDark : activeColorLight;
 
-    final future = useMemoized(() => fetchData());
-    return FutureBuilder<List<DataRecord>>(
-        future: future,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return ErrorScreen();
-          if (snapshot.hasData) return MainScreen(records: snapshot.data);
-          return LoadingScreen();
-        });
+    return ChangeNotifierProvider(
+      create: (_) => Covid19Provider(),
+      child: MainScreen(),
+    );
   }
 }
 
-class MainScreen extends StatefulWidget {
-  final List<DataRecord> records;
-
-  MainScreen({Key key, this.records}) : super(key: key);
-
-  @override
-  _MainScreenState createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
+class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var data = processData(widget.records);
+    final provider = context.watch<Covid19Provider>();
+    final data = provider.records;
+
     bool isNarrow = MediaQuery.of(context).size.width < 480;
+
+    final colors = [totalColor, recoveriesColor, deathsColor, activeColor];
+    final rnd = Random();
 
     return CustomScrollView(
       physics: BouncingScrollPhysics(),
       slivers: [
         SliverAppBar(
-          // // collapsedHeight: 58 * MediaQuery.of(context).textScaleFactor,
-          // collapsedHeight: kToolbarHeight +
-          //     (!kIsWeb && Platform.isAndroid
-          //         ? InfinityUi.statusBarHeight
-          //         : MediaQuery.of(context).viewInsets.top) +
-          //     1,
-          // expandedHeight: 160,
           stretch: true,
           pinned: true,
           title: AppTitle(),
@@ -136,31 +127,76 @@ class _MainScreenState extends State<MainScreen> {
           delegate: SliverChildListDelegate.fixed(
             [
               SizedBox(height: 8),
-              CustomCard(child: LastUpdated(data.last.date)),
+              //   ButtonBar(
+              //     alignment: MainAxisAlignment.center,
+              //     children: [
+              //       OutlineButton(
+              //         onPressed: () => provider.turnOffLoading(),
+              //         child: Icon(Icons.stop_rounded),
+              //       ),
+              //       OutlineButton(
+              //         onPressed: () => provider.turnOnLoading(),
+              //         child: Icon(Icons.play_arrow_rounded),
+              //       ),
+              //       OutlineButton(
+              //         onPressed: () => provider.clearData(),
+              //         child: Icon(Icons.delete_rounded),
+              //       ),
+              //       OutlineButton(
+              //         onPressed: () => provider.updateData(),
+              //         child: Icon(Icons.arrow_downward_rounded),
+              //       ),
+              //       OutlineButton(
+              //         onPressed: () => provider.dummyData(),
+              //         child: Icon(Icons.format_list_numbered_rounded),
+              //       ),
+              //     ],
+              //   ),
+              if (data.length < 2 && !provider.loading)
+                CustomCard(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Greška',
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: deathsColor,
+                        ),
+                      ),
+                      Text('Podaci nisu ispravno dohvaćeni'),
+                      SizedBox(height: 12),
+                      OutlineButton.icon(
+                        onPressed: () => provider.updateData(),
+                        icon: Icon(Icons.refresh_rounded),
+                        label: Text('Pokušaj ponovo'),
+                      ),
+                    ],
+                  ),
+                ),
               MediaQuery.of(context).size.width > 900
                   ? Container(
                       child: Row(
                         children: [
-                          DailySummary(data.last),
-                          Expanded(child: DailyStats(data.last)),
+                          DailySummary(),
+                          Expanded(child: DailyStats()),
                         ],
                       ),
                     )
                   : Container(
                       child: Column(
                         children: [
-                          DailySummary(data.last),
-                          DailyStats(data.last),
+                          DailySummary(),
+                          DailyStats(),
                         ],
                       ),
                     ),
               TitledCard(
                 title: 'Grafički prikaz',
-                child: Chart(data),
+                child: Chart(),
               ),
               TitledCard(
                 title: 'Tablični prikaz',
-                child: TableView(data),
+                child: TableView(),
               ),
               Footer(),
               SizedBox(
@@ -178,51 +214,75 @@ class _MainScreenState extends State<MainScreen> {
 }
 
 class LastUpdated extends StatelessWidget {
-  const LastUpdated(this.data, {Key key}) : super(key: key);
+  const LastUpdated(this.data, this.update, {Key key}) : super(key: key);
 
   final DateTime data;
+  final Function update;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        children: [
-          Icon(
-            Icons.refresh_rounded,
-            color: Colors.grey.withOpacity(0.5),
-          ),
-          SizedBox(width: 4),
-          Text(
-            'Ažurirano ${DateFormat("d. M. u HH:mm").format(data)}',
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyText1.color,
+    String displayedDate =
+        data != null ? DateFormat("d. M. HH:mm").format(data) : "";
+
+    return GestureDetector(
+      onTap: () => HapticFeedback.lightImpact(),
+      onLongPress: () {
+        HapticFeedback.heavyImpact();
+        if (update != null) update();
+      },
+      child: Container(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.refresh_rounded,
+              color: Colors.grey.withOpacity(0.5),
             ),
-          ),
-        ],
+            SizedBox(width: 4),
+            AnimatedCrossFade(
+              crossFadeState: data == null
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              duration: Duration(milliseconds: 300),
+              firstChild: Shimmer(
+                direction: ShimmerDirection.fromLeftToRight(),
+                child: SizedBox(height: 16, width: 60),
+              ),
+              secondChild: Text(
+                displayedDate,
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyText1.color,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class Chart extends HookWidget {
-  const Chart(this.data, {Key key}) : super(key: key);
-
-  final List<DataRecord> data;
-
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<Covid19Provider>();
+    final List<DataRecord> data = provider.records;
+
+    final hasError = provider.loading || provider.records.isEmpty;
     var verticalLineX = useState(0.0);
     var currentIndex = useState(0);
 
     final f = DateFormat("d. M.");
 
-    var currentItem = data[currentIndex.value];
+    DataRecord currentItem =
+        hasError ? null : data.elementAt(currentIndex.value);
 
     return Column(
       children: [
         MouseRegion(
           cursor: SystemMouseCursors.resizeLeftRight,
           onHover: (event) {
+            if (hasError) return;
             final width = MediaQuery.of(context).size.width;
             const minX = 30;
             final maxX = width - 30;
@@ -238,6 +298,7 @@ class Chart extends HookWidget {
           },
           child: GestureDetector(
             onHorizontalDragUpdate: (event) {
+              if (hasError) return;
               final width = MediaQuery.of(context).size.width;
               const minX = 30;
               final maxX = width - 30;
@@ -256,11 +317,18 @@ class Chart extends HookWidget {
                 Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
+                    Shimmer(
+                      enabled: hasError,
+                      child: SizedBox(height: 300, width: double.infinity),
+                    ),
                     Container(
                       height: 300,
                       child: Sparkline(
-                        data:
-                            data.map((e) => e.casesCroatia.toDouble()).toList(),
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.casesCroatia.toDouble())
+                                .toList(),
                         fillMode: FillMode.below,
                         lineColor: totalColor,
                         sharpCorners: false,
@@ -275,13 +343,17 @@ class Chart extends HookWidget {
                       ),
                     ),
                     Container(
-                      height: data.mapList((e) => e.recoveriesCroatia).max /
-                          data[data.length - 1].casesCroatia *
-                          300,
+                      height: hasError
+                          ? 0
+                          : data.mapList((e) => e.recoveriesCroatia).max /
+                              data[data.length - 1].casesCroatia *
+                              300,
                       child: Sparkline(
-                        data: data
-                            .map((e) => e.recoveriesCroatia.toDouble())
-                            .toList(),
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.recoveriesCroatia.toDouble())
+                                .toList(),
                         fillMode: FillMode.below,
                         lineColor: recoveriesColor,
                         sharpCorners: false,
@@ -296,13 +368,17 @@ class Chart extends HookWidget {
                       ),
                     ),
                     Container(
-                      height: data.mapList((e) => e.activeCroatia).max /
-                          data[data.length - 1].casesCroatia *
-                          300,
+                      height: hasError
+                          ? 0
+                          : data.mapList((e) => e.activeCroatia).max /
+                              data[data.length - 1].casesCroatia *
+                              300,
                       child: Sparkline(
-                        data: data
-                            .map((e) => e.activeCroatia.toDouble())
-                            .toList(),
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.activeCroatia.toDouble())
+                                .toList(),
                         fillMode: FillMode.below,
                         lineColor: activeColor,
                         sharpCorners: false,
@@ -317,13 +393,17 @@ class Chart extends HookWidget {
                       ),
                     ),
                     Container(
-                      height: data.mapList((e) => e.deathsCroatia).max /
-                          data[data.length - 1].casesCroatia *
-                          300,
+                      height: hasError
+                          ? 0
+                          : data.mapList((e) => e.deathsCroatia).max /
+                              data[data.length - 1].casesCroatia *
+                              300,
                       child: Sparkline(
-                        data: data
-                            .map((e) => e.deathsCroatia.toDouble())
-                            .toList(),
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.deathsCroatia.toDouble())
+                                .toList(),
                         fillMode: FillMode.below,
                         lineColor: deathsColor,
                         sharpCorners: false,
@@ -345,7 +425,7 @@ class Chart extends HookWidget {
                             .scaffoldBackgroundColor
                             .withOpacity(0.9),
                         child: Text(
-                          '${f.format(currentItem.date)}',
+                          '${hasError ? '—' : f.format(currentItem.date)}',
                           style: TextStyle(
                             fontSize: 20,
                           ),
@@ -372,7 +452,8 @@ class Chart extends HookWidget {
                         alignment: AlignmentDirectional.centerStart,
                         child: Opacity(
                           opacity: 0.4,
-                          child: Text(f.format(data.first.date)),
+                          child:
+                              Text(hasError ? '' : f.format(data.first.date)),
                         ),
                       ),
                       Container(
@@ -380,7 +461,7 @@ class Chart extends HookWidget {
                         alignment: AlignmentDirectional.centerEnd,
                         child: Opacity(
                           opacity: 0.4,
-                          child: Text(f.format(data.last.date)),
+                          child: Text(hasError ? '' : f.format(data.last.date)),
                         ),
                       ),
                       Positioned(
@@ -431,31 +512,32 @@ class Chart extends HookWidget {
             child: Row(
               children: [
                 DailyStatusCard(
-                  currentNumber: currentItem.casesCroatia,
+                  currentNumber: hasError ? null : currentItem.casesCroatia,
                   title: 'Ukupno',
                   color: totalColor,
-                  delta: currentItem.deltaTotal,
+                  delta: hasError ? -1 : currentItem.deltaTotal,
                   showLineAbove: true,
                 ),
                 DailyStatusCard(
-                  currentNumber: currentItem.recoveriesCroatia,
+                  currentNumber:
+                      hasError ? null : currentItem.recoveriesCroatia,
                   title: 'Oporavljeni',
                   color: recoveriesColor,
-                  delta: currentItem.deltaRecoveries,
+                  delta: hasError ? -1 : currentItem.deltaRecoveries,
                   showLineAbove: true,
                 ),
                 DailyStatusCard(
-                  currentNumber: currentItem.deathsCroatia,
+                  currentNumber: hasError ? null : currentItem.deathsCroatia,
                   title: 'Umrli',
                   color: deathsColor,
-                  delta: currentItem.deltaDeaths,
+                  delta: hasError ? -1 : currentItem.deltaDeaths,
                   showLineAbove: true,
                 ),
                 DailyStatusCard(
-                  currentNumber: currentItem.activeCroatia,
+                  currentNumber: hasError ? null : currentItem.activeCroatia,
                   title: 'Aktivni',
                   color: activeColor,
-                  delta: currentItem.deltaActive,
+                  delta: hasError ? -1 : currentItem.deltaActive,
                   showLineAbove: true,
                 ),
               ],
@@ -468,12 +550,15 @@ class Chart extends HookWidget {
 }
 
 class TableView extends StatelessWidget {
-  const TableView(this.data, {Key key}) : super(key: key);
-
-  final List<DataRecord> data;
-
   @override
   Widget build(BuildContext context) {
+    var provider = context.watch<Covid19Provider>();
+    List<DataRecord> data = [];
+
+    if (!provider.loading && provider.records.isNotEmpty) {
+      data = [...provider.records];
+    }
+
     return Column(
       children: [
         Container(
@@ -511,148 +596,157 @@ class TableView extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(
-          height: 320,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(0),
-            primary: false,
-            itemCount: data.length,
-            shrinkWrap: true,
-            reverse: false,
-            physics: BouncingScrollPhysics(),
-            itemBuilder: (context, index) {
-              final dataItem = data.reversed.toList()[index];
-              final f2 = DateFormat('d. M.');
+        AnimatedCrossFade(
+          crossFadeState: provider.loading || provider.records.isEmpty
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          duration: Duration(milliseconds: 300),
+          firstChild: Shimmer(
+            child: SizedBox(height: 320, width: double.infinity),
+          ),
+          secondChild: SizedBox(
+            height: 320,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(0),
+              primary: false,
+              itemCount: data.length,
+              shrinkWrap: true,
+              reverse: false,
+              physics: BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                final dataItem = data.reversed.toList()[index];
+                final f2 = DateFormat('d. M.');
 
-              String deltaTotal = '';
-              String deltaDeaths = '';
-              String deltaRecoveries = '';
-              String deltaActive = '';
+                String deltaTotal = '';
+                String deltaDeaths = '';
+                String deltaRecoveries = '';
+                String deltaActive = '';
 
-              deltaTotal = dataItem.deltaTotalDisplay;
-              deltaActive = dataItem.deltaActiveDisplay;
-              deltaDeaths = dataItem.deltaDeathsDisplay;
-              deltaRecoveries = dataItem.deltaRecoveriesDisplay;
+                deltaTotal = dataItem.deltaTotalDisplay;
+                deltaActive = dataItem.deltaActiveDisplay;
+                deltaDeaths = dataItem.deltaDeathsDisplay;
+                deltaRecoveries = dataItem.deltaRecoveriesDisplay;
 
-              if (deltaTotal == '0') deltaTotal = '—';
-              if (deltaRecoveries == '0') deltaRecoveries = '—';
-              if (deltaDeaths == '0') deltaDeaths = '—';
-              if (deltaActive == '0') deltaActive = '—';
+                if (deltaTotal == '0') deltaTotal = '—';
+                if (deltaRecoveries == '0') deltaRecoveries = '—';
+                if (deltaDeaths == '0') deltaDeaths = '—';
+                if (deltaActive == '0') deltaActive = '—';
 
-              final isToday = index == 0;
+                final isToday = index == 0;
 
-              return Container(
-                height: 60,
-                margin: const EdgeInsets.symmetric(
-                  vertical: 4,
-                  horizontal: 0,
-                ),
-                decoration: BoxDecoration(
-                  color: isToday
-                      ? Theme.of(context).primaryColor.withOpacity(0.05)
-                      : index % 2 == 0
-                          ? Colors.grey.withOpacity(0.05)
-                          : Colors.transparent,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Container(
-                      width: 48,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            f2.format(dataItem.date),
-                            style: tableItem,
-                          ),
-                          Text(
-                            '#${data.length - index}',
-                            style: tableItemFooter,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      alignment: AlignmentDirectional.centerStart,
-                      width: 48,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${dataItem.casesCroatia}',
-                            style: tableItem.copyWith(
-                              fontSize: 18,
+                return Container(
+                  height: 60,
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isToday
+                        ? Theme.of(context).primaryColor.withOpacity(0.05)
+                        : index % 2 == 0
+                            ? Colors.grey.withOpacity(0.05)
+                            : Colors.transparent,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Container(
+                        width: 48,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              f2.format(dataItem.date),
+                              style: tableItem,
                             ),
-                          ),
-                          Text(
-                            '$deltaTotal',
-                            style: tableItemFooter,
-                          ),
-                        ],
+                            Text(
+                              '#${data.length - index}',
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(
-                      alignment: AlignmentDirectional.centerStart,
-                      width: 68,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${dataItem.recoveriesCroatia}',
-                            style: tableItem,
-                          ),
-                          Text(
-                            '$deltaRecoveries',
-                            style: tableItemFooter,
-                          ),
-                        ],
+                      Container(
+                        alignment: AlignmentDirectional.centerStart,
+                        width: 48,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${dataItem.casesCroatia}',
+                              style: tableItem.copyWith(
+                                fontSize: 18,
+                              ),
+                            ),
+                            Text(
+                              '$deltaTotal',
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(
-                      alignment: AlignmentDirectional.centerStart,
-                      width: 48,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${dataItem.deathsCroatia}',
-                            style: tableItem,
-                          ),
-                          Text(
-                            '$deltaDeaths',
-                            style: tableItemFooter,
-                          ),
-                        ],
+                      Container(
+                        alignment: AlignmentDirectional.centerStart,
+                        width: 68,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${dataItem.recoveriesCroatia}',
+                              style: tableItem,
+                            ),
+                            Text(
+                              '$deltaRecoveries',
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(
-                      alignment: AlignmentDirectional.centerStart,
-                      width: 48,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${dataItem.activeCroatia}',
-                            style: tableItem,
-                          ),
-                          Text(
-                            '$deltaActive',
-                            style: tableItemFooter,
-                          ),
-                        ],
+                      Container(
+                        alignment: AlignmentDirectional.centerStart,
+                        width: 48,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${dataItem.deathsCroatia}',
+                              style: tableItem,
+                            ),
+                            Text(
+                              '$deltaDeaths',
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      Container(
+                        alignment: AlignmentDirectional.centerStart,
+                        width: 48,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${dataItem.activeCroatia}',
+                              style: tableItem,
+                            ),
+                            Text(
+                              '$deltaActive',
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -661,14 +755,35 @@ class TableView extends StatelessWidget {
 }
 
 class DailySummary extends StatelessWidget {
-  const DailySummary(this.item, {Key key}) : super(key: key);
-
-  final DataRecord item;
-
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<Covid19Provider>();
+    int casesCroatia;
+    int recoveriesCroatia;
+    int deathsCroatia;
+    int activeCroatia;
+    int deltaTotal = -1;
+    int deltaRecoveries = -1;
+    int deltaDeaths = -1;
+    int deltaActive = -1;
+    DateTime date;
+
+    if (!provider.loading && provider.records.isNotEmpty) {
+      final item = provider.records.last;
+      date = item.date;
+      casesCroatia = item.casesCroatia;
+      recoveriesCroatia = item.recoveriesCroatia;
+      deathsCroatia = item.deathsCroatia;
+      activeCroatia = item.activeCroatia;
+      deltaTotal = item.deltaTotal;
+      deltaRecoveries = item.deltaRecoveries;
+      deltaDeaths = item.deltaDeaths;
+      deltaActive = item.deltaActive;
+    }
+
     return TitledCard(
       title: 'Najnoviji podaci',
+      rightOfTitle: LastUpdated(date, () => provider.updateData()),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -679,26 +794,26 @@ class DailySummary extends StatelessWidget {
               children: [
                 DailyStatusCard(
                   title: 'Ukupno',
-                  currentNumber: item.casesCroatia,
-                  delta: item.deltaTotal,
+                  currentNumber: casesCroatia,
+                  delta: deltaTotal,
                   color: totalColor,
                 ),
                 DailyStatusCard(
                   title: 'Oporavljeni',
-                  currentNumber: item.recoveriesCroatia,
-                  delta: item.deltaRecoveries,
+                  currentNumber: recoveriesCroatia,
+                  delta: deltaRecoveries,
                   color: recoveriesColor,
                 ),
                 DailyStatusCard(
                   title: 'Umrli',
-                  currentNumber: item.deathsCroatia,
-                  delta: item.deltaDeaths,
+                  currentNumber: deathsCroatia,
+                  delta: deltaDeaths,
                   color: deathsColor,
                 ),
                 DailyStatusCard(
                   title: 'Aktivni',
-                  currentNumber: item.activeCroatia,
-                  delta: item.deltaActive,
+                  currentNumber: activeCroatia,
+                  delta: deltaActive,
                   color: activeColor,
                 ),
               ],
@@ -711,16 +826,21 @@ class DailySummary extends StatelessWidget {
 }
 
 class DailyStats extends StatelessWidget {
-  const DailyStats(this.item, {Key key}) : super(key: key);
-
-  final DataRecord item;
-
   @override
   Widget build(BuildContext context) {
-    final recoveriesRatio = item.recoveriesCroatia / item.casesCroatia;
-    final deathsRatio = item.deathsCroatia / item.casesCroatia;
-    final activeRatio = item.activeCroatia / item.casesCroatia;
+    final provider = context.watch<Covid19Provider>();
+    DataRecord item;
 
+    double recoveriesRatio = 0;
+    double deathsRatio = 0;
+    double activeRatio = 0;
+
+    if (!provider.loading && provider.records.isNotEmpty) {
+      item = provider.records.last;
+      recoveriesRatio = item.recoveriesCroatia / item.casesCroatia;
+      deathsRatio = item.deathsCroatia / item.casesCroatia;
+      activeRatio = item.activeCroatia / item.casesCroatia;
+    }
     final width = min(360, MediaQuery.of(context).size.width - 60).toDouble();
 
     return TitledCard(
@@ -730,27 +850,42 @@ class DailyStats extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: Container(
-              width: width,
-              child: Row(
-                children: [
-                  Container(
-                    height: 10,
-                    width: width * recoveriesRatio,
-                    color: recoveriesColor,
+            child: Stack(
+              children: [
+                Shimmer(
+                  enabled: provider.loading || provider.records.isEmpty,
+                  direction: ShimmerDirection.fromLeftToRight(),
+                  child: SizedBox(width: width, height: 10),
+                ),
+                Container(
+                  width: width,
+                  child: Row(
+                    children: [
+                      AnimatedContainer(
+                        duration: Duration(milliseconds: 600),
+                        curve: Curves.decelerate,
+                        height: 10,
+                        width: width * recoveriesRatio,
+                        color: recoveriesColor,
+                      ),
+                      AnimatedContainer(
+                        duration: Duration(milliseconds: 600),
+                        curve: Curves.decelerate,
+                        height: 10,
+                        width: width * activeRatio,
+                        color: activeColor,
+                      ),
+                      AnimatedContainer(
+                        duration: Duration(milliseconds: 600),
+                        curve: Curves.decelerate,
+                        height: 10,
+                        width: width * deathsRatio,
+                        color: deathsColor,
+                      ),
+                    ],
                   ),
-                  Container(
-                    height: 10,
-                    width: width * activeRatio,
-                    color: activeColor,
-                  ),
-                  Container(
-                    height: 10,
-                    width: width * deathsRatio,
-                    color: deathsColor,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           SizedBox(height: 10),
@@ -760,17 +895,20 @@ class DailyStats extends StatelessWidget {
             child: Row(
               children: [
                 DailyStatusCard(
-                  currentNumber: recoveriesRatio * 100,
+                  currentNumber:
+                      recoveriesRatio == 0 ? null : recoveriesRatio * 100,
                   title: 'Oporavljeni',
                   suffix: '%',
                 ),
                 DailyStatusCard(
-                  currentNumber: activeRatio * 100,
+                  currentNumber:
+                      recoveriesRatio == 0 ? null : activeRatio * 100,
                   title: 'Aktivni',
                   suffix: '%',
                 ),
                 DailyStatusCard(
-                  currentNumber: deathsRatio * 100,
+                  currentNumber:
+                      recoveriesRatio == 0 ? null : deathsRatio * 100,
                   title: 'Umrli',
                   suffix: '%',
                 ),

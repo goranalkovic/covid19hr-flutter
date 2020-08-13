@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class TitledCard extends StatelessWidget {
-  const TitledCard({Key key, @required this.title, @required this.child})
+  const TitledCard(
+      {Key key, @required this.title, @required this.child, this.rightOfTitle})
       : super(key: key);
 
   final String title;
   final Widget child;
+  final Widget rightOfTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -14,15 +16,20 @@ class TitledCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(
-              4.0,
-            ),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.headline6.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            padding: const EdgeInsets.all(4.0),
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headline6.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                if (rightOfTitle != null) rightOfTitle,
+              ],
             ),
           ),
           SizedBox(height: 8),

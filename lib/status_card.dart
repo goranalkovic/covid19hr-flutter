@@ -25,9 +25,12 @@ class DailyStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final defaultColor = Theme.of(context).textTheme.bodyText1.color;
 
+    final String deltaDisplay = delta == null
+        ? ''
+        : (delta > 0 ? '+$delta' : delta == 0 ? '—' : '$delta');
+
     return Container(
       width: 96,
-      // color: Colors.red[50],
       margin: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -50,23 +53,24 @@ class DailyStatusCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (currentNumber == null)
-                Shimmer(
+              AnimatedCrossFade(
+                crossFadeState: currentNumber == null
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                duration: Duration(milliseconds: 500),
+                firstChild: Shimmer(
                   direction: ShimmerDirection.fromLeftToRight(),
                   color: color,
-                  child: SizedBox(
-                    height: 32,
-                    width: 64,
-                  ),
-                )
-              else
-                Text(
-                  '${currentNumber.toStringAsFixed(2).replaceAll(".00", "")}',
+                  child: SizedBox(width: 76, height: 36),
+                ),
+                secondChild: Text(
+                  '${(currentNumber ?? 0).toStringAsFixed(2).replaceAll(".00", "")}',
                   style: TextStyle(
                     fontSize: 30,
                     height: 1.25,
                   ),
                 ),
+              ),
               if (suffix != null)
                 Container(
                   padding: const EdgeInsets.only(
@@ -84,23 +88,28 @@ class DailyStatusCard extends StatelessWidget {
             ],
           ),
           if (delta != null)
-            Container(
-              width: 36,
-              child: Text(
-                delta > 0 ? '+$delta' : delta == 0 ? '—' : '$delta',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
+            AnimatedCrossFade(
+              crossFadeState:
+                  delta < 0 && suffix == null && currentNumber == null
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+              duration: Duration(milliseconds: 500),
+              firstChild: Shimmer(
+                direction: ShimmerDirection.fromLeftToRight(),
+                color: color,
+                child: SizedBox(height: 18, width: 36),
+              ),
+              secondChild: Container(
+                width: 36,
+                child: Text(
+                  deltaDisplay,
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
-          if (delta == null && suffix == null && currentNumber == null)
-            Shimmer(
-                direction: ShimmerDirection.fromLeftToRight(),
-                child: SizedBox(
-                  height: 18,
-                  width: 20,
-                ))
         ],
       ),
     );
