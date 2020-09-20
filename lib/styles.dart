@@ -1,7 +1,22 @@
+import 'dart:io';
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-final tableHeader = TextStyle(fontWeight: FontWeight.bold);
-final tableItem = TextStyle(fontSize: 16);
+final tableHeader = TextStyle(
+  fontSize: 13,
+  fontFamily: 'DMSans',
+);
+
+final tableItem = TextStyle(
+  fontSize: 16,
+  letterSpacing: -1,
+  fontFeatures: [
+    FontFeature.tabularFigures(),
+  ],
+);
+
 final tableItemFooter = TextStyle(color: Colors.grey);
 
 Color totalColor = Colors.blueGrey;

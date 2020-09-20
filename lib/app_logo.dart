@@ -1,12 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTitle extends StatelessWidget {
+  final bool isLarge;
   const AppTitle({
     Key key,
+    this.isLarge = false,
   }) : super(key: key);
 
   @override
@@ -18,16 +17,28 @@ class AppTitle extends StatelessWidget {
           Icons.flare_rounded,
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.deepPurple
-              : Colors.deepPurple[100],
+              : Colors.deepPurple[300],
+          size: isLarge ? 24 : 18,
         ),
         SizedBox(width: 6),
         Text(
-          'COVID-19 podaci',
+          'COVID-19',
           style: TextStyle(
-            fontFamily:
-                GoogleFonts.sourceCodeProTextTheme().bodyText1.fontFamily,
-            fontWeight: FontWeight.w600,
+            fontFamily: "DMSans",
+            fontWeight: FontWeight.normal,
             color: Theme.of(context).textTheme.bodyText1.color,
+            fontSize: isLarge ? 24 : 18,
+          ),
+        ),
+        Text(
+          'HR',
+          style: TextStyle(
+            fontFamily: "DMSans",
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.deepPurple
+                : Colors.deepPurple[200],
+            fontSize: isLarge ? 24 : 18,
           ),
         ),
       ],

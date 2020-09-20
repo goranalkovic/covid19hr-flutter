@@ -13,7 +13,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_sparkline/flutter_sparkline.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flinq/flinq.dart';
 import 'package:infinity_ui/infinity_ui.dart';
 
@@ -49,10 +48,10 @@ class MyApp extends StatelessWidget {
       }
     }
 
-    final lightTextTheme =
-        GoogleFonts.sourceSansProTextTheme(ThemeData.light().textTheme);
-    final darkTextTheme =
-        GoogleFonts.sourceSansProTextTheme(ThemeData.dark().textTheme);
+    TextTheme lightTextTheme =
+        ThemeData.light().textTheme.apply(fontFamily: 'Inter');
+    TextTheme darkTextTheme =
+        ThemeData.dark().textTheme.apply(fontFamily: 'Inter');
 
     return MaterialApp(
       title: 'COVID-19 podaci',
@@ -62,20 +61,21 @@ class MyApp extends StatelessWidget {
         child: Scaffold(body: HomePage()),
       ),
       theme: ThemeData.light().copyWith(
-        primaryColor: Colors.deepPurple,
+        primaryColor: Colors.white,
         textTheme: lightTextTheme,
         appBarTheme: AppBarTheme(
           brightness: Brightness.light,
-          color: ThemeData.light().cardColor,
+          color: Colors.white,
           elevation: 0,
         ),
       ),
       darkTheme: ThemeData.dark().copyWith(
-        primaryColor: Colors.deepPurple[200],
+        primaryColor: Colors.deepPurple[400],
+        scaffoldBackgroundColor: Color(0xff202020),
         textTheme: darkTextTheme,
         appBarTheme: AppBarTheme(
           brightness: Brightness.dark,
-          color: ThemeData.dark().cardColor,
+          color: Color(0xff202020),
           elevation: 0,
         ),
       ),
@@ -107,40 +107,18 @@ class MainScreen extends StatelessWidget {
       physics: BouncingScrollPhysics(),
       slivers: [
         SliverAppBar(
-          stretch: true,
           pinned: true,
-          centerTitle: true,
-          title: AppTitle(),
+          floating: false,
+          flexibleSpace: FlexibleSpaceBar(
+            title: AppTitle(isLarge: true),
+            centerTitle: true,
+            collapseMode: CollapseMode.pin,
+          ),
+          expandedHeight: 160,
         ),
         SliverList(
           delegate: SliverChildListDelegate.fixed(
             [
-              SizedBox(height: 8),
-              //   ButtonBar(
-              //     alignment: MainAxisAlignment.center,
-              //     children: [
-              //       OutlineButton(
-              //         onPressed: () => provider.turnOffLoading(),
-              //         child: Icon(Icons.stop_rounded),
-              //       ),
-              //       OutlineButton(
-              //         onPressed: () => provider.turnOnLoading(),
-              //         child: Icon(Icons.play_arrow_rounded),
-              //       ),
-              //       OutlineButton(
-              //         onPressed: () => provider.clearData(),
-              //         child: Icon(Icons.delete_rounded),
-              //       ),
-              //       OutlineButton(
-              //         onPressed: () => provider.updateData(),
-              //         child: Icon(Icons.arrow_downward_rounded),
-              //       ),
-              //       OutlineButton(
-              //         onPressed: () => provider.dummyData(),
-              //         child: Icon(Icons.format_list_numbered_rounded),
-              //       ),
-              //     ],
-              //   ),
               Wrap(
                 alignment: WrapAlignment.center,
                 children: [
@@ -165,10 +143,10 @@ class MainScreen extends StatelessWidget {
               ),
               Footer(),
               SizedBox(
-                height: 12 +
+                height: 12.0 +
                     (!kIsWeb && Platform.isAndroid
                         ? InfinityUi.navigationBarHeight
-                        : 0),
+                        : 0.0),
               ),
             ],
           ),
@@ -190,11 +168,10 @@ class LastUpdated extends StatelessWidget {
         data != null ? DateFormat("d. M. HH:mm").format(data) : "";
 
     return GestureDetector(
-      onTap: () => HapticFeedback.lightImpact(),
-      onLongPress: () {
-        HapticFeedback.heavyImpact();
-        if (update != null) update();
-      },
+      // onTap: () => HapticFeedback.lightImpact(),
+      onLongPressStart: (_) => HapticFeedback.lightImpact(),
+      onLongPressEnd: (_) => HapticFeedback.heavyImpact(),
+      onLongPress: update,
       child: Container(
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -236,233 +213,260 @@ class Chart extends HookWidget {
     final hasError = provider.loading || provider.records.isEmpty;
     var verticalLineX = useState(0.0);
     var currentIndex = useState(0);
+    var currentTouchX = useState(0.0);
 
     final f = DateFormat("d. M.");
 
     DataRecord currentItem =
         hasError ? null : data.elementAt(currentIndex.value);
 
-    processInput(event) {
+    // void processMouseInput(event) {
+    //   if (hasError) return;
+
+    //   const margin = 20;
+
+    //   final maxWidth =
+    //       (MediaQuery.of(context).size.width < 1200 ? 480 : 640) - 30 - margin;
+
+    //   final currentX = event.localPosition.dx;
+
+    //   verticalLineX.value = currentX;
+
+    //   final step = (maxWidth - margin) / data.length;
+
+    //   currentIndex.value = (currentX / step).round().clamp(0, data.length - 1);
+    // }
+
+    void processTouchInput(DragUpdateDetails event) {
       if (hasError) return;
 
-      final maxWidth =
-          (MediaQuery.of(context).size.width < 1200 ? 480 : 640) - 30;
+      const margin = 0;
 
-      final currentX = event.localPosition.dx;
+      int maxWidth =
+          (MediaQuery.of(context).size.width < 1200 ? 480 : 640) - 30 - margin;
 
-      verticalLineX.value = currentX;
+      currentTouchX.value += event.delta.dx;
 
-      final step = maxWidth / data.length;
+      currentTouchX.value = currentTouchX.value.clamp(0, maxWidth).toDouble();
 
-      currentIndex.value = (currentX / step).round().clamp(0, data.length - 1);
+      verticalLineX.value = currentTouchX.value;
+
+      final step = (maxWidth - margin) / data.length;
+
+      currentIndex.value =
+          (currentTouchX.value / step).round().clamp(0, data.length - 1);
+
+      if (currentIndex.value == 0 || currentIndex.value == (data.length - 1)) {
+        HapticFeedback.lightImpact();
+      }
     }
 
     double chartHeight = min(300, MediaQuery.of(context).size.height * 0.5);
 
     return SizedBox(
-      height: 140 + chartHeight,
+      height: 140.0 + chartHeight,
       child: Column(
         children: [
-          MouseRegion(
-            cursor: SystemMouseCursors.resizeLeftRight,
-            onHover: processInput,
-            child: GestureDetector(
-              onHorizontalDragUpdate: processInput,
-              child: Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.bottomCenter,
+          // MouseRegion(
+          //   cursor: SystemMouseCursors.resizeLeftRight,
+          //   onHover: processMouseInput,
+          // child:
+          GestureDetector(
+            onHorizontalDragUpdate: processTouchInput,
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    Shimmer(
+                      enabled: hasError,
+                      child:
+                          SizedBox(height: chartHeight, width: double.infinity),
+                    ),
+                    Container(
+                      height: chartHeight,
+                      child: Sparkline(
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.casesCroatia.toDouble())
+                                .toList(),
+                        fillMode: FillMode.below,
+                        lineColor: totalColor,
+                        sharpCorners: false,
+                        fillGradient: new LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            totalColor.withOpacity(0.5),
+                            totalColor.withOpacity(0.0)
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: hasError
+                          ? 0
+                          : data.mapList((e) => e.recoveriesCroatia).max /
+                              data[data.length - 1].casesCroatia *
+                              chartHeight,
+                      child: Sparkline(
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.recoveriesCroatia.toDouble())
+                                .toList(),
+                        fillMode: FillMode.below,
+                        lineColor: recoveriesColor,
+                        sharpCorners: false,
+                        fillGradient: new LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            recoveriesColor.withOpacity(0.5),
+                            recoveriesColor.withOpacity(0.0)
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: hasError
+                          ? 0
+                          : data.mapList((e) => e.activeCroatia).max /
+                              data[data.length - 1].casesCroatia *
+                              chartHeight,
+                      child: Sparkline(
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.activeCroatia.toDouble())
+                                .toList(),
+                        fillMode: FillMode.below,
+                        lineColor: activeColor,
+                        sharpCorners: false,
+                        fillGradient: new LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            activeColor.withOpacity(0.5),
+                            activeColor.withOpacity(0.0)
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: hasError
+                          ? 0
+                          : data.mapList((e) => e.deathsCroatia).max /
+                              data[data.length - 1].casesCroatia *
+                              chartHeight,
+                      child: Sparkline(
+                        data: hasError
+                            ? [0, 0]
+                            : data
+                                .map((e) => e.deathsCroatia.toDouble())
+                                .toList(),
+                        fillMode: FillMode.below,
+                        lineColor: deathsColor,
+                        sharpCorners: false,
+                        fillGradient: new LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            deathsColor.withOpacity(0.5),
+                            deathsColor.withOpacity(0.0)
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      left: 4,
+                      child: Container(
+                        color: Theme.of(context)
+                            .scaffoldBackgroundColor
+                            .withOpacity(0.9),
+                        child: Text(
+                          '${hasError ? '—' : f.format(currentItem.date)}',
+                          style: TextStyle(
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  height: 24,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyText1
+                        .color
+                        .withOpacity(0.02),
+                  ),
+                  margin: const EdgeInsets.only(top: 8),
+                  child: Stack(
                     children: [
-                      Shimmer(
-                        enabled: hasError,
-                        child: SizedBox(
-                            height: chartHeight, width: double.infinity),
-                      ),
                       Container(
-                        height: chartHeight,
-                        child: Sparkline(
-                          data: hasError
-                              ? [0, 0]
-                              : data
-                                  .map((e) => e.casesCroatia.toDouble())
-                                  .toList(),
-                          fillMode: FillMode.below,
-                          lineColor: totalColor,
-                          sharpCorners: false,
-                          fillGradient: new LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              totalColor.withOpacity(0.5),
-                              totalColor.withOpacity(0.0)
-                            ],
-                          ),
+                        padding: const EdgeInsets.only(left: 4),
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Opacity(
+                          opacity: 0.4,
+                          child:
+                              Text(hasError ? '' : f.format(data.first.date)),
                         ),
                       ),
                       Container(
-                        height: hasError
-                            ? 0
-                            : data.mapList((e) => e.recoveriesCroatia).max /
-                                data[data.length - 1].casesCroatia *
-                                chartHeight,
-                        child: Sparkline(
-                          data: hasError
-                              ? [0, 0]
-                              : data
-                                  .map((e) => e.recoveriesCroatia.toDouble())
-                                  .toList(),
-                          fillMode: FillMode.below,
-                          lineColor: recoveriesColor,
-                          sharpCorners: false,
-                          fillGradient: new LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              recoveriesColor.withOpacity(0.5),
-                              recoveriesColor.withOpacity(0.0)
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                        height: hasError
-                            ? 0
-                            : data.mapList((e) => e.activeCroatia).max /
-                                data[data.length - 1].casesCroatia *
-                                chartHeight,
-                        child: Sparkline(
-                          data: hasError
-                              ? [0, 0]
-                              : data
-                                  .map((e) => e.activeCroatia.toDouble())
-                                  .toList(),
-                          fillMode: FillMode.below,
-                          lineColor: activeColor,
-                          sharpCorners: false,
-                          fillGradient: new LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              activeColor.withOpacity(0.5),
-                              activeColor.withOpacity(0.0)
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                        height: hasError
-                            ? 0
-                            : data.mapList((e) => e.deathsCroatia).max /
-                                data[data.length - 1].casesCroatia *
-                                chartHeight,
-                        child: Sparkline(
-                          data: hasError
-                              ? [0, 0]
-                              : data
-                                  .map((e) => e.deathsCroatia.toDouble())
-                                  .toList(),
-                          fillMode: FillMode.below,
-                          lineColor: deathsColor,
-                          sharpCorners: false,
-                          fillGradient: new LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              deathsColor.withOpacity(0.5),
-                              deathsColor.withOpacity(0.0)
-                            ],
-                          ),
+                        padding: const EdgeInsets.only(right: 4),
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Opacity(
+                          opacity: 0.4,
+                          child: Text(hasError ? '' : f.format(data.last.date)),
                         ),
                       ),
                       Positioned(
+                        left: verticalLineX.value
+                            .clamp(0, MediaQuery.of(context).size.width - 60)
+                            .toDouble(),
                         top: 0,
-                        left: 4,
                         child: Container(
-                          color: Theme.of(context)
-                              .scaffoldBackgroundColor
-                              .withOpacity(0.9),
-                          child: Text(
-                            '${hasError ? '—' : f.format(currentItem.date)}',
-                            style: TextStyle(
-                              fontSize: 20,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyText1
+                                .color
+                                .withOpacity(0.8),
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 0,
+                                color:
+                                    Theme.of(context).scaffoldBackgroundColor,
+                                offset: Offset(0, 1),
+                                spreadRadius: 1,
+                              ),
+                            ],
+                            borderRadius: BorderRadius.circular(2),
+                            border: Border.all(
+                              color:
+                                  Theme.of(context).textTheme.bodyText1.color,
+                              width: 1,
+                              style: BorderStyle.solid,
                             ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    height: 24,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: Theme.of(context)
-                          .textTheme
-                          .bodyText1
-                          .color
-                          .withOpacity(0.02),
-                    ),
-                    margin: const EdgeInsets.only(top: 8),
-                    child: Stack(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.only(left: 4),
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Opacity(
-                            opacity: 0.4,
-                            child:
-                                Text(hasError ? '' : f.format(data.first.date)),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.only(right: 4),
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: Opacity(
-                            opacity: 0.4,
-                            child:
-                                Text(hasError ? '' : f.format(data.last.date)),
-                          ),
-                        ),
-                        Positioned(
-                          left: verticalLineX.value
-                              .clamp(0, MediaQuery.of(context).size.width - 60)
-                              .toDouble(),
-                          top: 0,
-                          child: Container(
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .textTheme
-                                  .bodyText1
-                                  .color
-                                  .withOpacity(0.8),
-                              boxShadow: [
-                                BoxShadow(
-                                  blurRadius: 0,
-                                  color:
-                                      Theme.of(context).scaffoldBackgroundColor,
-                                  offset: Offset(0, 1),
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                              borderRadius: BorderRadius.circular(2),
-                              border: Border.all(
-                                color:
-                                    Theme.of(context).textTheme.bodyText1.color,
-                                width: 1,
-                                style: BorderStyle.solid,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+            // ),
           ),
           Container(
-            margin: const EdgeInsets.only(top: 24),
+            margin: const EdgeInsets.only(top: 23),
             alignment: AlignmentDirectional.centerStart,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -545,7 +549,7 @@ class TableView extends StatelessWidget {
                   child: Text('Ukupno', style: tableHeader),
                 ),
                 SizedBox(
-                  width: 68,
+                  width: 70,
                   child: Text('Oporavljeni', style: tableHeader),
                 ),
                 SizedBox(
@@ -626,7 +630,7 @@ class TableView extends StatelessWidget {
                               ),
                               Text(
                                 '#${data.length - index}',
-                                style: tableItemFooter,
+                                style: tableItemFooter.copyWith(fontSize: 12),
                               ),
                             ],
                           ),
@@ -641,7 +645,7 @@ class TableView extends StatelessWidget {
                               Text(
                                 '${dataItem.casesCroatia}',
                                 style: tableItem.copyWith(
-                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               Text(
@@ -653,7 +657,7 @@ class TableView extends StatelessWidget {
                         ),
                         Container(
                           alignment: AlignmentDirectional.centerStart,
-                          width: 68,
+                          width: 70,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -824,6 +828,7 @@ class DailyStats extends StatelessWidget {
                 ),
                 Container(
                   width: width,
+                  height: 10,
                   child: Row(
                     children: [
                       AnimatedContainer(

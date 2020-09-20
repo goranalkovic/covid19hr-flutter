@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
@@ -27,7 +27,11 @@ class DailyStatusCard extends StatelessWidget {
 
     final String deltaDisplay = delta == null
         ? ''
-        : (delta > 0 ? '+$delta' : delta == 0 ? '—' : '$delta');
+        : (delta > 0
+            ? '+$delta'
+            : delta == 0
+                ? '—'
+                : '$delta');
 
     return Container(
       width: 96,
@@ -47,7 +51,8 @@ class DailyStatusCard extends StatelessWidget {
             title,
             style: TextStyle(
               color: color ?? defaultColor,
-              fontWeight: FontWeight.w400,
+              fontFamily: "DMSans",
+              fontSize: 15,
             ),
           ),
           Row(
@@ -67,8 +72,11 @@ class DailyStatusCard extends StatelessWidget {
                 secondChild: Text(
                   '${(currentNumber ?? 0).toStringAsFixed(2).replaceAll(".00", "")}',
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: 27,
                     height: 1.25,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -2,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
               ),
@@ -81,7 +89,7 @@ class DailyStatusCard extends StatelessWidget {
                   child: Text(
                     suffix,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 16,
                       color: Colors.grey,
                     ),
                   ),

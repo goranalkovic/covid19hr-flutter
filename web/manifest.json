@@ -1,11 +1,11 @@
 {
-    "name": "covid19hr",
-    "short_name": "covid19hr",
+    "name": "COVID-19 HR",
+    "short_name": "COVID-19HR",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "An app to track COVID-19 cases in Croatia",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
