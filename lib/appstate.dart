@@ -1,6 +1,7 @@
 import 'package:covid19hr/data_loading.dart';
 import 'package:covid19hr/model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 class Covid19Provider extends ChangeNotifier {
   List<DataRecord> _records = [];
@@ -11,6 +12,7 @@ class Covid19Provider extends ChangeNotifier {
   bool get loading => _loading;
 
   updateData() async {
+    HapticFeedback.heavyImpact();
     _loading = true;
     notifyListeners();
 

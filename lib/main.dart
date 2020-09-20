@@ -170,7 +170,7 @@ class LastUpdated extends StatelessWidget {
     return GestureDetector(
       // onTap: () => HapticFeedback.lightImpact(),
       onLongPressStart: (_) => HapticFeedback.lightImpact(),
-      onLongPressEnd: (_) => HapticFeedback.heavyImpact(),
+      onTap: () => HapticFeedback.lightImpact(),
       onLongPress: update,
       child: Container(
         child: Row(
@@ -253,11 +253,15 @@ class Chart extends HookWidget {
 
       final step = (maxWidth - margin) / data.length;
 
-      currentIndex.value =
+      var newValue =
           (currentTouchX.value / step).round().clamp(0, data.length - 1);
 
-      if (currentIndex.value == 0 || currentIndex.value == (data.length - 1)) {
-        HapticFeedback.lightImpact();
+      if (newValue != currentIndex.value) {
+        currentIndex.value = newValue;
+
+        if (newValue == 0 || newValue == data.length - 1) {
+          HapticFeedback.lightImpact();
+        }
       }
     }
 
