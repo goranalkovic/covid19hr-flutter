@@ -21,7 +21,7 @@ class Covid19Provider extends ChangeNotifier {
     _records = [...processed];
 
     _loading = false;
-
+    HapticFeedback.lightImpact();
     notifyListeners();
   }
 

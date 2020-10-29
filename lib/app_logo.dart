@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 
 class AppTitle extends StatelessWidget {
   final bool isLarge;
+  final bool isHuge;
   const AppTitle({
     Key key,
     this.isLarge = false,
+    this.isHuge = false,
   }) : super(key: key);
 
   @override
@@ -18,7 +20,11 @@ class AppTitle extends StatelessWidget {
           color: Theme.of(context).brightness == Brightness.light
               ? Colors.deepPurple
               : Colors.deepPurple[300],
-          size: isLarge ? 24 : 18,
+          size: isHuge
+              ? 30
+              : isLarge
+                  ? 24
+                  : 18,
         ),
         SizedBox(width: 6),
         Text(
@@ -27,7 +33,11 @@ class AppTitle extends StatelessWidget {
             fontFamily: "DMSans",
             fontWeight: FontWeight.normal,
             color: Theme.of(context).textTheme.bodyText1.color,
-            fontSize: isLarge ? 24 : 18,
+            fontSize: isHuge
+                ? 34
+                : isLarge
+                    ? 24
+                    : 18,
           ),
         ),
         Text(
@@ -38,7 +48,11 @@ class AppTitle extends StatelessWidget {
             color: Theme.of(context).brightness == Brightness.light
                 ? Colors.deepPurple
                 : Colors.deepPurple[200],
-            fontSize: isLarge ? 24 : 18,
+            fontSize: isHuge
+                ? 34
+                : isLarge
+                    ? 24
+                    : 18,
           ),
         ),
       ],

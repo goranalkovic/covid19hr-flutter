@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
 import 'package:covid19hr/app_logo.dart';
 import 'package:covid19hr/appstate.dart';
 import 'package:covid19hr/footer.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
           color: Colors.white,
           elevation: 0,
         ),
+        scaffoldBackgroundColor: Colors.white,
       ),
       darkTheme: ThemeData.dark().copyWith(
         primaryColor: Colors.deepPurple[400],
@@ -103,55 +105,57 @@ class HomePage extends StatelessWidget {
 class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      physics: BouncingScrollPhysics(),
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          floating: false,
-          flexibleSpace: FlexibleSpaceBar(
-            title: AppTitle(isLarge: true),
-            centerTitle: true,
-            collapseMode: CollapseMode.pin,
+    final provider = context.watch<Covid19Provider>();
+
+    return RefreshIndicator(
+      onRefresh: () => provider.updateData(),
+      child: CustomScrollView(
+        physics: BouncingScrollPhysics(),
+        slivers: [
+          // SliverAppBar(
+          //   pinned: true,
+          //   floating: false,
+          //   flexibleSpace: FlexibleSpaceBar(
+          //     title: AppTitle(isLarge: true),
+          //     centerTitle: true,
+          //     collapseMode: CollapseMode.pin,
+          //   ),
+          //   expandedHeight: 140,
+          // ),
+          SliverList(
+            delegate: SliverChildListDelegate.fixed(
+              [
+                Container(
+                    padding: const EdgeInsets.only(top: 32),
+                    alignment: Alignment.center,
+                    child: AppTitle(isHuge: true)),
+                DailySummary(),
+                TitledCard(
+                  child: Chart(),
+                  maxWidth: MediaQuery.of(context).size.width,
+                ),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  children: [
+                    DailyStats(),
+                    TitledCard(
+                      title: 'Tablični prikaz',
+                      child: TableView(),
+                    ),
+                  ],
+                ),
+                Footer(),
+                SizedBox(
+                  height: 12.0 +
+                      (!kIsWeb && Platform.isAndroid
+                          ? InfinityUi.navigationBarHeight
+                          : 0.0),
+                ),
+              ],
+            ),
           ),
-          expandedHeight: 160,
-        ),
-        SliverList(
-          delegate: SliverChildListDelegate.fixed(
-            [
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  DailySummary(),
-                  DailyStats(),
-                ],
-              ),
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  TitledCard(
-                    title: 'Grafički prikaz',
-                    child: Chart(),
-                    maxWidth:
-                        MediaQuery.of(context).size.width < 1200 ? 480 : 640,
-                  ),
-                  TitledCard(
-                    title: 'Tablični prikaz',
-                    child: TableView(),
-                  ),
-                ],
-              ),
-              Footer(),
-              SizedBox(
-                height: 12.0 +
-                    (!kIsWeb && Platform.isAndroid
-                        ? InfinityUi.navigationBarHeight
-                        : 0.0),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -164,23 +168,23 @@ class LastUpdated extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String displayedDate =
-        data != null ? DateFormat("d. M. HH:mm").format(data) : "";
+    String displayedDate = data != null ? DateFormat("d. M.").format(data) : "";
+    String displayedTime = data != null ? DateFormat("HH:mm").format(data) : "";
 
     return GestureDetector(
       // onTap: () => HapticFeedback.lightImpact(),
-      onLongPressStart: (_) => HapticFeedback.lightImpact(),
-      onTap: () => HapticFeedback.lightImpact(),
-      onLongPress: update,
+      // onLongPressStart: (_) => HapticFeedback.lightImpact(),
+      // onTap: () => HapticFeedback.lightImpact(),
+      // onLongPress: update,
       child: Container(
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.refresh_rounded,
-              color: Colors.grey.withOpacity(0.5),
-            ),
-            SizedBox(width: 4),
+            // Icon(
+            //   Icons.refresh_rounded,
+            //   color: Colors.grey.withOpacity(0.5),
+            // ),
+            // SizedBox(width: 4),
             AnimatedCrossFade(
               crossFadeState: data == null
                   ? CrossFadeState.showFirst
@@ -188,13 +192,54 @@ class LastUpdated extends StatelessWidget {
               duration: Duration(milliseconds: 300),
               firstChild: Shimmer(
                 direction: ShimmerDirection.fromLeftToRight(),
-                child: SizedBox(height: 16, width: 60),
+                child: SizedBox(height: 24, width: 120),
               ),
-              secondChild: Text(
-                displayedDate,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyText1.color,
-                ),
+              secondChild: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.ideographic,
+                children: [
+                  // Text(
+                  //   displayedDate,
+                  //   style: TextStyle(
+                  //     color: Theme.of(context).textTheme.bodyText1.color,
+                  //     fontSize: 20,
+                  //   ),
+                  // ),
+                  // Text(
+                  //   displayedTime,
+                  //   style: TextStyle(
+                  //     color: Theme.of(context)
+                  //         .textTheme
+                  //         .bodyText1
+                  //         .color
+                  //         .withOpacity(0.4),
+                  //     fontSize: 14,
+                  //   ),
+                  // ),
+                  Text(
+                    displayedDate,
+                    style: TextStyle(
+                      fontFamily: 'DMSans',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    displayedTime,
+                    style: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyText1
+                          .color
+                          .withOpacity(0.5),
+                      fontFamily: 'DMSans',
+                      fontWeight: FontWeight.normal,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -211,11 +256,13 @@ class Chart extends HookWidget {
     final List<DataRecord> data = provider.records;
 
     final hasError = provider.loading || provider.records.isEmpty;
-    var verticalLineX = useState(0.0);
-    var currentIndex = useState(0);
+    var verticalLineX =
+        useState(hasError ? 0.0 : MediaQuery.of(context).size.width - 30);
+    var currentIndex = useState(hasError ? 0 : data.length - 1);
     var currentTouchX = useState(0.0);
 
     final f = DateFormat("d. M.");
+    final f2 = DateFormat("HH:mm");
 
     DataRecord currentItem =
         hasError ? null : data.elementAt(currentIndex.value);
@@ -242,8 +289,7 @@ class Chart extends HookWidget {
 
       const margin = 0;
 
-      int maxWidth =
-          (MediaQuery.of(context).size.width < 1200 ? 480 : 640) - 30 - margin;
+      int maxWidth = (MediaQuery.of(context).size.width.toInt()) - 30 - margin;
 
       currentTouchX.value += event.delta.dx;
 
@@ -265,10 +311,15 @@ class Chart extends HookWidget {
       }
     }
 
-    double chartHeight = min(300, MediaQuery.of(context).size.height * 0.5);
+    double chartHeight = 400;
+    int numOfLines = 20;
+
+    int delta = hasError
+        ? 1
+        : (data[data.length - 1].casesCroatia / numOfLines).round();
 
     return SizedBox(
-      height: 140.0 + chartHeight,
+      // height: 140.0 + chartHeight,
       child: Column(
         children: [
           // MouseRegion(
@@ -282,6 +333,50 @@ class Chart extends HookWidget {
                 Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
+                    for (double i = 0; i < numOfLines; i++)
+                      Positioned(
+                        top: (chartHeight / numOfLines) * i,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          height: 1,
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyText1
+                              .color
+                              .withOpacity(0.05),
+                        ),
+                      ),
+                    for (double i = 0; i < numOfLines; i++)
+                      Positioned(
+                        left: 0,
+                        top: (chartHeight / numOfLines) * i - 1,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            // color: Theme.of(context).scaffoldBackgroundColor,
+                          ),
+                          child: Text(
+                            hasError
+                                ? ''
+                                : '${data[data.length - 1].casesCroatia - (delta * i).round()}',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyText1
+                                  .color
+                                  .withOpacity(0.15),
+                              fontWeight: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? FontWeight.w200
+                                  : FontWeight.w500,
+                              fontSize: 11,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ),
+                      ),
                     Shimmer(
                       enabled: hasError,
                       child:
@@ -383,21 +478,21 @@ class Chart extends HookWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      top: 0,
-                      left: 4,
-                      child: Container(
-                        color: Theme.of(context)
-                            .scaffoldBackgroundColor
-                            .withOpacity(0.9),
-                        child: Text(
-                          '${hasError ? '—' : f.format(currentItem.date)}',
-                          style: TextStyle(
-                            fontSize: 20,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Positioned(
+                    //   top: 0,
+                    //   left: 4,
+                    //   child: Container(
+                    //     color: Theme.of(context)
+                    //         .scaffoldBackgroundColor
+                    //         .withOpacity(0.9),
+                    //     child: Text(
+                    //       '${hasError ? '—' : f.format(currentItem.date)}',
+                    //       style: TextStyle(
+                    //         fontSize: 20,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
                 Container(
@@ -472,42 +567,93 @@ class Chart extends HookWidget {
           Container(
             margin: const EdgeInsets.only(top: 23),
             alignment: AlignmentDirectional.centerStart,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  DailyStatusCard(
-                    currentNumber: hasError ? null : currentItem.casesCroatia,
-                    title: 'Ukupno',
-                    color: totalColor,
-                    delta: hasError ? -1 : currentItem.deltaTotal,
-                    showLineAbove: true,
+            child: Column(
+              children: [
+                // if (MediaQuery.of(context).size.width <= 600)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.ideographic,
+                  children: [
+                    Text(
+                      '${hasError ? '—' : f.format(currentItem.date)}',
+                      style: TextStyle(
+                        fontFamily: 'DMSans',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      '${hasError ? '—' : f2.format(currentItem.date)}',
+                      style: TextStyle(
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyText1
+                            .color
+                            .withOpacity(0.5),
+                        fontFamily: 'DMSans',
+                        fontWeight: FontWeight.normal,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+                // if (MediaQuery.of(context).size.width <= 600)
+                SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  // color: Colors.red,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    runAlignment: WrapAlignment.center,
+                    runSpacing: 20,
+                    children: [
+                      // if (MediaQuery.of(context).size.width > 600)
+                      //   DailyStatusCard(
+                      //     currentValue:
+                      //         '${hasError ? '—' : f.format(currentItem.date)}',
+                      //     title: "Dan",
+                      //     showLineAbove: true,
+                      //     color: Colors.transparent,
+                      //     deltaTxt: hasError ? '' : f2.format(currentItem.date),
+                      //   ),
+                      DailyStatusCard(
+                        currentNumber:
+                            hasError ? null : currentItem.casesCroatia,
+                        title: 'Ukupno',
+                        color: totalColor,
+                        delta: hasError ? -1 : currentItem.deltaTotal,
+                        showLineAbove: true,
+                      ),
+                      DailyStatusCard(
+                        currentNumber:
+                            hasError ? null : currentItem.recoveriesCroatia,
+                        title: 'Oporavljeni',
+                        color: recoveriesColor,
+                        delta: hasError ? -1 : currentItem.deltaRecoveries,
+                        showLineAbove: true,
+                      ),
+                      DailyStatusCard(
+                        currentNumber:
+                            hasError ? null : currentItem.activeCroatia,
+                        title: 'Aktivni',
+                        color: activeColor,
+                        delta: hasError ? -1 : currentItem.deltaActive,
+                        showLineAbove: true,
+                      ),
+                      DailyStatusCard(
+                        currentNumber:
+                            hasError ? null : currentItem.deathsCroatia,
+                        title: 'Umrli',
+                        color: deathsColor,
+                        delta: hasError ? -1 : currentItem.deltaDeaths,
+                        showLineAbove: true,
+                      ),
+                    ],
                   ),
-                  DailyStatusCard(
-                    currentNumber:
-                        hasError ? null : currentItem.recoveriesCroatia,
-                    title: 'Oporavljeni',
-                    color: recoveriesColor,
-                    delta: hasError ? -1 : currentItem.deltaRecoveries,
-                    showLineAbove: true,
-                  ),
-                  DailyStatusCard(
-                    currentNumber: hasError ? null : currentItem.deathsCroatia,
-                    title: 'Umrli',
-                    color: deathsColor,
-                    delta: hasError ? -1 : currentItem.deltaDeaths,
-                    showLineAbove: true,
-                  ),
-                  DailyStatusCard(
-                    currentNumber: hasError ? null : currentItem.activeCroatia,
-                    title: 'Aktivni',
-                    color: activeColor,
-                    delta: hasError ? -1 : currentItem.deltaActive,
-                    showLineAbove: true,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -755,42 +901,45 @@ class DailySummary extends StatelessWidget {
 
     return TitledCard(
       maxWidth: MediaQuery.of(context).size.width < 1200 ? 480 : 640,
-      title: 'Najnoviji podaci',
-      rightOfTitle: LastUpdated(date, () => provider.updateData()),
+      // title: 'Zadnji podaci',
+      // rightOfTitle: LastUpdated(date, () => provider.updateData()),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: BouncingScrollPhysics(),
-            child: Row(
-              children: [
-                DailyStatusCard(
-                  title: 'Ukupno',
-                  currentNumber: casesCroatia,
-                  delta: deltaTotal,
-                  color: totalColor,
-                ),
-                DailyStatusCard(
-                  title: 'Oporavljeni',
-                  currentNumber: recoveriesCroatia,
-                  delta: deltaRecoveries,
-                  color: recoveriesColor,
-                ),
-                DailyStatusCard(
-                  title: 'Umrli',
-                  currentNumber: deathsCroatia,
-                  delta: deltaDeaths,
-                  color: deathsColor,
-                ),
-                DailyStatusCard(
-                  title: 'Aktivni',
-                  currentNumber: activeCroatia,
-                  delta: deltaActive,
-                  color: activeColor,
-                ),
-              ],
-            ),
+          LastUpdated(date, () => provider.updateData()),
+          SizedBox(height: 24),
+          Wrap(
+            alignment: WrapAlignment.center,
+            runSpacing: 24,
+            children: [
+              DailyStatusCard(
+                title: 'Ukupno',
+                currentNumber: casesCroatia,
+                delta: deltaTotal,
+                color: totalColor,
+                isLarge: MediaQuery.of(context).size.width >= 560,
+              ),
+              DailyStatusCard(
+                title: 'Oporavljeni',
+                currentNumber: recoveriesCroatia,
+                delta: deltaRecoveries,
+                color: recoveriesColor,
+                isLarge: MediaQuery.of(context).size.width >= 840,
+              ),
+              DailyStatusCard(
+                title: 'Aktivni',
+                currentNumber: activeCroatia,
+                delta: deltaActive,
+                color: activeColor,
+                isLarge: MediaQuery.of(context).size.width >= 840,
+              ),
+              DailyStatusCard(
+                title: 'Umrli',
+                currentNumber: deathsCroatia,
+                delta: deltaDeaths,
+                color: deathsColor,
+                isLarge: MediaQuery.of(context).size.width >= 840,
+              ),
+            ],
           ),
         ],
       ),
@@ -873,18 +1022,21 @@ class DailyStats extends StatelessWidget {
                       recoveriesRatio == 0 ? null : recoveriesRatio * 100,
                   title: 'Oporavljeni',
                   suffix: '%',
+                  color: recoveriesColor,
                 ),
                 DailyStatusCard(
                   currentNumber:
                       recoveriesRatio == 0 ? null : activeRatio * 100,
                   title: 'Aktivni',
                   suffix: '%',
+                  color: activeColor,
                 ),
                 DailyStatusCard(
                   currentNumber:
                       recoveriesRatio == 0 ? null : deathsRatio * 100,
                   title: 'Umrli',
                   suffix: '%',
+                  color: deathsColor,
                 ),
               ],
             ),

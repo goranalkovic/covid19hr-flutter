@@ -1,40 +1,57 @@
 import 'dart:ui';
 
+import 'package:covid19hr/appstate.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
+
+import 'package:provider/provider.dart';
 
 class DailyStatusCard extends StatelessWidget {
   const DailyStatusCard({
     Key key,
-    @required this.currentNumber,
     @required this.title,
+    this.currentNumber,
+    this.currentValue,
     this.color,
     this.delta,
+    this.deltaTxt,
     this.suffix,
     this.showLineAbove = false,
+    this.isLarge = false,
   }) : super(key: key);
 
   final num currentNumber;
+  final String currentValue;
   final int delta;
+  final String deltaTxt;
   final String title;
   final String suffix;
   final Color color;
   final bool showLineAbove;
+  final bool isLarge;
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<Covid19Provider>();
+
     final defaultColor = Theme.of(context).textTheme.bodyText1.color;
 
-    final String deltaDisplay = delta == null
+    final String deltaDisplay = provider.loading
         ? ''
-        : (delta > 0
-            ? '+$delta'
-            : delta == 0
-                ? '—'
-                : '$delta');
+        : delta == null && deltaTxt == null
+            ? ''
+            : deltaTxt == null
+                ? (delta > 0
+                    ? '+$delta'
+                    : delta == 0
+                        ? '—'
+                        : '$delta')
+                : deltaTxt;
 
-    return Container(
-      width: 96,
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      curve: Curves.decelerate,
+      width: isLarge ? 186 : 96,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -52,14 +69,14 @@ class DailyStatusCard extends StatelessWidget {
             style: TextStyle(
               color: color ?? defaultColor,
               fontFamily: "DMSans",
-              fontSize: 15,
+              fontSize: isLarge ? 20 : 15,
             ),
           ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AnimatedCrossFade(
-                crossFadeState: currentNumber == null
+                crossFadeState: currentNumber == null && currentValue == null
                     ? CrossFadeState.showFirst
                     : CrossFadeState.showSecond,
                 duration: Duration(milliseconds: 300),
@@ -67,18 +84,32 @@ class DailyStatusCard extends StatelessWidget {
                 firstChild: Shimmer(
                   direction: ShimmerDirection.fromLeftToRight(),
                   color: color,
-                  child: SizedBox(width: 76, height: 36),
+                  child: SizedBox(
+                      width: isLarge ? 106 : 76, height: isLarge ? 66 : 36),
                 ),
-                secondChild: Text(
-                  '${(currentNumber ?? 0).toStringAsFixed(2).replaceAll(".00", "")}',
-                  style: TextStyle(
-                    fontSize: 27,
-                    height: 1.25,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -2,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
+                secondChild: currentNumber == null
+                    ? (currentValue == null
+                        ? Container()
+                        : Text(
+                            currentValue,
+                            style: TextStyle(
+                              fontSize: isLarge ? 44 : 27,
+                              height: 1.25,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -2,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ))
+                    : Text(
+                        '${(currentNumber ?? 0).toStringAsFixed(2).replaceAll(".00", "")}',
+                        style: TextStyle(
+                          fontSize: isLarge ? 44 : 27,
+                          height: 1.25,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -2,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
               ),
               if (suffix != null)
                 Container(
@@ -96,25 +127,31 @@ class DailyStatusCard extends StatelessWidget {
                 )
             ],
           ),
-          if (delta != null)
+          if (delta != null || deltaTxt != null)
             AnimatedCrossFade(
-              crossFadeState:
-                  delta < 0 && suffix == null && currentNumber == null
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
+              crossFadeState: provider.loading == true
+                  //  ||
+                  //         ((delta != null && delta < 0) &&
+                  //             suffix == null &&
+                  //             currentNumber == null)
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
               duration: Duration(milliseconds: 500),
               firstChild: Shimmer(
                 direction: ShimmerDirection.fromLeftToRight(),
                 color: color,
-                child: SizedBox(height: 18, width: 36),
+                child: SizedBox(
+                  height: isLarge ? 24 : 18,
+                  width: isLarge ? 80 : 56,
+                ),
               ),
               secondChild: Container(
-                width: 36,
+                width: double.infinity,
                 child: Text(
                   deltaDisplay,
                   style: TextStyle(
                     color: Colors.grey,
-                    fontSize: 14,
+                    fontSize: isLarge ? 24 : 14,
                   ),
                 ),
               ),

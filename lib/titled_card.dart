@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class TitledCard extends StatelessWidget {
   const TitledCard(
       {Key key,
-      @required this.title,
+      this.title,
       @required this.child,
       this.rightOfTitle,
       this.maxWidth = 480})
@@ -20,23 +20,24 @@ class TitledCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-              // color: Colors.lightGreen.withOpacity(0.3),
-              margin: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.headline6.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontFamily: "DMSans",
-                        ),
-                  ),
-                  if (rightOfTitle != null) rightOfTitle,
-                ],
-              )),
+          if (title != null)
+            Container(
+                // color: Colors.lightGreen.withOpacity(0.3),
+                margin: const EdgeInsets.all(4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.headline6.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontFamily: "DMSans",
+                          ),
+                    ),
+                    if (rightOfTitle != null) rightOfTitle,
+                  ],
+                )),
           SizedBox(height: 8),
           child
         ],
@@ -61,7 +62,7 @@ class CustomCard extends StatelessWidget {
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         // color: Colors.pink.withOpacity(0.2),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        // border: Border.all(color: Colors.grey.withOpacity(0.2)),
         borderRadius: BorderRadius.circular(6),
       ),
       child: child,
