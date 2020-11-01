@@ -28,7 +28,7 @@ dependencies:
   flutter_sparkline: ^0.1.0
   flinq: ^1.1.1
   shimmer_animation: ^0.1.1+1
-  infinity_ui: ^0.2.5
+  # infinity_ui: ^0.2.5
   flutter_hooks: ^0.14.0
   provider: ^4.3.2
   flutter_launcher_icons: ^0.8.0

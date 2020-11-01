@@ -15,7 +15,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_sparkline/flutter_sparkline.dart';
 import 'package:flinq/flinq.dart';
-import 'package:infinity_ui/infinity_ui.dart';
 
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -23,9 +22,9 @@ import 'package:shimmer_animation/shimmer_animation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb) {
-    if (Platform.isAndroid) await InfinityUi.enable();
-  }
+  // if (!kIsWeb) {
+  //   if (Platform.isAndroid) await InfinityUi.enable();
+  // }
   runApp(MyApp());
 }
 
@@ -59,10 +58,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: ChangeNotifierProvider(
         create: (_) => Covid19Provider(),
-        child: Scaffold(body: HomePage()),
+        child: Scaffold(
+          body: HomePage(),
+        ),
       ),
       theme: ThemeData.light().copyWith(
         primaryColor: Colors.white,
+        accentColor: Colors.deepPurple,
         textTheme: lightTextTheme,
         appBarTheme: AppBarTheme(
           brightness: Brightness.light,
@@ -73,6 +75,7 @@ class MyApp extends StatelessWidget {
       ),
       darkTheme: ThemeData.dark().copyWith(
         primaryColor: Colors.deepPurple[400],
+        accentColor: Colors.deepPurple[300],
         scaffoldBackgroundColor: Color(0xff202020),
         textTheme: darkTextTheme,
         appBarTheme: AppBarTheme(
@@ -108,23 +111,19 @@ class MainScreen extends StatelessWidget {
     final provider = context.watch<Covid19Provider>();
 
     return RefreshIndicator(
+      displacement: 80,
       onRefresh: () => provider.updateData(),
       child: CustomScrollView(
         physics: BouncingScrollPhysics(),
         slivers: [
-          // SliverAppBar(
-          //   pinned: true,
-          //   floating: false,
-          //   flexibleSpace: FlexibleSpaceBar(
-          //     title: AppTitle(isLarge: true),
-          //     centerTitle: true,
-          //     collapseMode: CollapseMode.pin,
-          //   ),
-          //   expandedHeight: 140,
-          // ),
           SliverList(
             delegate: SliverChildListDelegate.fixed(
               [
+                if (!kIsWeb)
+                  if (Platform.isAndroid)
+                    SizedBox(
+                      height: MediaQuery.of(context).viewPadding.top,
+                    ),
                 Container(
                     padding: const EdgeInsets.only(top: 32),
                     alignment: Alignment.center,
@@ -145,12 +144,12 @@ class MainScreen extends StatelessWidget {
                   ],
                 ),
                 Footer(),
-                SizedBox(
-                  height: 12.0 +
-                      (!kIsWeb && Platform.isAndroid
-                          ? InfinityUi.navigationBarHeight
-                          : 0.0),
-                ),
+                SizedBox(height: 12.0),
+                if (!kIsWeb)
+                  if (Platform.isAndroid)
+                    SizedBox(
+                      height: MediaQuery.of(context).viewPadding.bottom,
+                    ),
               ],
             ),
           ),
@@ -675,7 +674,7 @@ class TableView extends StatelessWidget {
     double chartHeight = min(300, MediaQuery.of(context).size.height * 0.5);
 
     return SizedBox(
-      height: 140 + chartHeight,
+      // height: 140 + chartHeight,
       child: Column(
         children: [
           Container(
