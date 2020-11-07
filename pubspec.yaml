@@ -27,12 +27,13 @@ dependencies:
   intl: ^0.16.1
   flutter_sparkline: ^0.1.0
   flinq: ^1.1.1
-  shimmer_animation: ^0.1.1+1
-  # infinity_ui: ^0.2.5
-  flutter_hooks: ^0.14.0
+  shimmer_animation: ^0.2.1
+  flutter_hooks: ^0.14.1
   provider: ^4.3.2
-  flutter_launcher_icons: ^0.8.0
+  flutter_launcher_icons: ^0.8.1
   http: ^0.12.2
+  fluentui_system_icons: ^1.1.83
+  flutter_material_pickers: ^1.8.0
 
 dev_dependencies:
   flutter_test:
@@ -41,9 +42,9 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icons/icon.png"
-  adaptive_icon_background: "assets/icons/icon_background.png"
-  adaptive_icon_foreground: "assets/icons/icon_foreground.png"
+  image_path: "assets/icons/complete-icon.png"
+  adaptive_icon_background: "assets/icons/back_plate.png"
+  adaptive_icon_foreground: "assets/icons/front_plate.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

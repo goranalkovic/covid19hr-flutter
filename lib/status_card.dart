@@ -69,7 +69,7 @@ class DailyStatusCard extends StatelessWidget {
             style: TextStyle(
               color: color ?? defaultColor,
               fontFamily: "DMSans",
-              fontSize: isLarge ? 20 : 15,
+              fontSize: isLarge ? 19 : 15,
             ),
           ),
           Row(

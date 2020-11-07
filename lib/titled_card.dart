@@ -25,11 +25,12 @@ class TitledCard extends StatelessWidget {
                 // color: Colors.lightGreen.withOpacity(0.3),
                 margin: const EdgeInsets.all(4.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       title,
+                      textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headline6.copyWith(
                             fontWeight: FontWeight.w600,
                             fontFamily: "DMSans",

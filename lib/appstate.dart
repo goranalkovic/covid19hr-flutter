@@ -4,10 +4,33 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class Covid19Provider extends ChangeNotifier {
-  List<DataRecord> _records = [];
+  List<GlobalDataRecord> _globalRecords = [];
+  List<CountyData> _countyRecords = [];
   bool _loading = false;
+  String _county;
 
-  List<DataRecord> get records => _records;
+  List<GlobalDataRecord> get globalRecords => _globalRecords;
+  List<CountyData> get countyRecords => _countyRecords;
+  String get county => _county;
+
+  List<GenericDataRecord> get data {
+    List<GenericDataRecord> tempList = [];
+
+    if (_county == null) {
+      for (var record in _globalRecords) {
+        tempList.add(GenericDataRecord.fromGlobal(record));
+      }
+    } else {
+      for (var item in _countyRecords) {
+        tempList.add(GenericDataRecord.fromCounty(
+            item.records
+                .firstWhere((CountyDataRecord r) => r.countyName == _county),
+            item.date));
+      }
+    }
+
+    return tempList;
+  }
 
   bool get loading => _loading;
 
@@ -17,8 +40,10 @@ class Covid19Provider extends ChangeNotifier {
     notifyListeners();
 
     final fetched = await fetchData();
-    final processed = processData(fetched);
-    _records = [...processed];
+    final processedGlobal = processGlobalData(fetched.globalData);
+    final processedCounty = processCountyData(fetched.countyData);
+    _globalRecords = [...processedGlobal];
+    _countyRecords = [...processedCounty];
 
     _loading = false;
     HapticFeedback.lightImpact();
@@ -26,7 +51,7 @@ class Covid19Provider extends ChangeNotifier {
   }
 
   clearData() {
-    _records = [];
+    _globalRecords = [];
     notifyListeners();
   }
 
@@ -40,9 +65,19 @@ class Covid19Provider extends ChangeNotifier {
     notifyListeners();
   }
 
+  changeCounty(String newCounty) {
+    _county = newCounty;
+    notifyListeners();
+  }
+
+  setToGlobalData() {
+    _county = null;
+    notifyListeners();
+  }
+
   dummyData() {
-    _records = [
-      DataRecord(
+    _globalRecords = [
+      GlobalDataRecord(
           date: DateTime.now().subtract(Duration(days: 1)),
           casesCroatia: 90,
           recoveriesCroatia: 5,
@@ -51,7 +86,7 @@ class Covid19Provider extends ChangeNotifier {
           deltaActive: 0,
           deltaDeaths: 0,
           deltaRecoveries: 0),
-      DataRecord(
+      GlobalDataRecord(
           date: DateTime.now(),
           casesCroatia: 100,
           recoveriesCroatia: 20,
@@ -68,3 +103,27 @@ class Covid19Provider extends ChangeNotifier {
     updateData();
   }
 }
+
+List<String> counties = [
+  "Bjelovarsko-bilogorska",
+  "Brodsko-posavska",
+  "Dubrovačko-neretvanska",
+  "Grad Zagreb",
+  "Istarska",
+  "Karlovačka",
+  "Koprivničko-križevačka",
+  "Krapinsko-zagorska županija",
+  "Ličko-senjska",
+  "Međimurska",
+  "Osječko-baranjska",
+  "Požeško-slavonska",
+  "Primorsko-goranska",
+  "Šibensko-kninska",
+  "Sisačko-moslavačka",
+  "Splitsko-dalmatinska",
+  "Varaždinska",
+  "Virovitičko-podravska",
+  "Vukovarsko-srijemska",
+  "Zadarska",
+  "Zagrebačka "
+];
