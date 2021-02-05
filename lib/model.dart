@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class AppData {
   List<GlobalDataRecord> globalData;
   List<CountyData> countyData;
@@ -162,6 +164,8 @@ class CountyDataRecord {
   }
 }
 
+NumberFormat formatter = NumberFormat('###,###,###');
+
 /*
 {"Datum":"2020-11-07 08:21","PodaciDetaljno":[...] }
  */
@@ -199,26 +203,26 @@ class GenericDataRecord {
   String get deltaTotalDisplay => deltaTotal == 0
       ? '0'
       : deltaTotal > 0
-          ? '+$deltaTotal'
-          : '$deltaTotal';
+          ? '+${formatter.format(deltaTotal)}'
+          : '${formatter.format(deltaTotal)}';
 
   String get deltaDeathsDisplay => deltaDeaths == 0
       ? '0'
       : deltaDeaths > 0
-          ? '+$deltaDeaths'
-          : '$deltaDeaths';
+          ? '+${formatter.format(deltaDeaths)}'
+          : '${formatter.format(deltaDeaths)}';
 
   String get deltaRecoveriesDisplay => deltaRecoveries == 0
       ? '0'
       : deltaRecoveries > 0
-          ? '+$deltaRecoveries'
-          : '$deltaRecoveries';
+          ? '+${formatter.format(deltaRecoveries)}'
+          : '${formatter.format(deltaRecoveries)}';
 
   String get deltaActiveDisplay => deltaActive == 0
       ? '0'
       : deltaActive > 0
-          ? '+$deltaActive'
-          : '$deltaActive';
+          ? '+${formatter.format(deltaActive)}'
+          : '${formatter.format(deltaActive)}';
 
   GenericDataRecord(
       {this.date,
