@@ -17,9 +17,7 @@ class AppTitle extends StatelessWidget {
       children: [
         Icon(
           Icons.flare_rounded,
-          color: Theme.of(context).brightness == Brightness.light
-              ? Colors.deepPurple
-              : Colors.deepPurple[300],
+          color: Theme.of(context).accentColor,
           size: isHuge
               ? 30
               : isLarge
