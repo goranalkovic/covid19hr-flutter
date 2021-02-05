@@ -17,7 +17,7 @@ class DailyStatusCard extends StatelessWidget {
     this.deltaTxt,
     this.suffix,
     this.showLineAbove = false,
-    this.isLarge = false,
+    this.isLarge = true,
   }) : super(key: key);
 
   final num currentNumber;
@@ -48,31 +48,32 @@ class DailyStatusCard extends StatelessWidget {
                         : '$delta')
                 : deltaTxt;
 
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 300),
-      curve: Curves.decelerate,
-      width: isLarge ? 186 : 96,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showLineAbove)
-            Container(
-              width: 24,
-              height: 3,
-              color: color ?? Theme.of(context).textTheme.bodyText1.color,
-              margin: const EdgeInsets.only(bottom: 6),
-            ),
+          // if (showLineAbove)
+          //   Container(
+          //     width: 24,
+          //     height: 3,
+          //     color: color ?? Theme.of(context).textTheme.bodyText1.color,
+          //     margin: const EdgeInsets.only(bottom: 6),
+          //   ),
           Text(
             title,
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: color ?? defaultColor,
               fontFamily: "DMSans",
-              fontSize: isLarge ? 19 : 15,
+              fontSize: isLarge ? 15 : 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
           Row(
+            // mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AnimatedCrossFade(
@@ -146,9 +147,9 @@ class DailyStatusCard extends StatelessWidget {
                 ),
               ),
               secondChild: Container(
-                width: double.infinity,
                 child: Text(
                   deltaDisplay,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: isLarge ? 24 : 14,
