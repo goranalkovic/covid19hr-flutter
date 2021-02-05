@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:covid19hr/styles.dart';
 import 'package:expandable_slider/expandable_slider.dart';
-import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -14,8 +13,6 @@ import 'package:provider/provider.dart';
 import 'package:flinq/flinq.dart';
 
 import 'appstate.dart';
-// import 'components/daily_stats.dart';
-// import 'components/daily_status_row.dart';
 import 'components/status_blocks.dart';
 import 'model.dart';
 
@@ -30,10 +27,7 @@ class GenericChart extends HookWidget {
 
     var swapDelta = useState(true);
 
-    // var verticalLineX =
-    // useState(hasError ? 0.0 : MediaQuery.of(context).size.width);
     var currentIndex = useState(-1);
-    // var currentTouchX = useState(0.0);
     var showVerticalLine = useState(false);
 
     if (!provider.loading && currentIndex.value == -1) {
@@ -43,49 +37,12 @@ class GenericChart extends HookWidget {
     final f = DateFormat("d. M.");
     final f2 = DateFormat("HH:mm");
 
-    NumberFormat formatter = NumberFormat('###,###,###');
-
     if (!provider.loading && currentIndex.value > data.length - 1) {
       currentIndex.value = data.length - 1;
     }
 
     GenericDataRecord currentItem =
         hasError ? null : data.elementAt(currentIndex.value);
-
-    // double dateLineMargin = 8;
-    // double dateIndicatorWidth = 2;
-
-    // void processTouchInput(DragUpdateDetails event, double maxWidth) {
-    //   if (hasError) return;
-    //   if (event.delta.dx == 0) return;
-
-    //   double dateLineWidth =
-    //       maxWidth - (dateLineMargin * 2) - dateIndicatorWidth;
-
-    //   double calculatedNewValue =
-    //       (currentTouchX.value + event.delta.dx).clamp(0, maxWidth).toDouble();
-
-    //   if (calculatedNewValue == currentTouchX.value) return;
-
-    //   currentTouchX.value = calculatedNewValue;
-
-    //   verticalLineX.value = calculatedNewValue.clamp(0, dateLineWidth);
-
-    //   final step = maxWidth / data.length;
-
-    //   var newIndex =
-    //       (calculatedNewValue / step).round().clamp(0, data.length - 1);
-
-    //   if (currentIndex.value >= data.length) newIndex = 0;
-
-    //   if (newIndex != currentIndex.value) {
-    //     currentIndex.value = newIndex;
-
-    //     if (newIndex == 0 || newIndex == data.length - 1) {
-    //       HapticFeedback.lightImpact();
-    //     }
-    //   }
-    // }
 
     double chartHeight =
         (MediaQuery.of(context).size.height / 1.7).clamp(300.0, 840.0);
@@ -268,110 +225,6 @@ class GenericChart extends HookWidget {
                   ),
                 ],
               ),
-
-              //   Container(
-              //     margin: const EdgeInsets.only(top: 23),
-              //     alignment: AlignmentDirectional.centerStart,
-              //     child: Column(
-              //       children: [
-              //         // if (MediaQuery.of(context).size.width <= 600)
-              //         Row(
-              //           mainAxisAlignment: MainAxisAlignment.center,
-              //           crossAxisAlignment: CrossAxisAlignment.baseline,
-              //           textBaseline: TextBaseline.ideographic,
-              //           children: [
-              //             Text(
-              //               '${hasError ? '—' : f.format(currentItem.date)}',
-              //               style: TextStyle(
-              //                 fontFamily: 'DMSans',
-              //                 fontSize: 20,
-              //                 fontWeight: FontWeight.w700,
-              //               ),
-              //             ),
-              //             SizedBox(width: 12),
-              //             Text(
-              //               '${hasError ? '—' : f2.format(currentItem.date)}',
-              //               style: TextStyle(
-              //                 color: Theme.of(context)
-              //                     .textTheme
-              //                     .bodyText1
-              //                     .color
-              //                     .withOpacity(0.5),
-              //                 fontFamily: 'DMSans',
-              //                 fontWeight: FontWeight.normal,
-              //                 fontSize: 18,
-              //               ),
-              //             ),
-              //           ],
-              //         ),
-              //         // if (MediaQuery.of(context).size.width <= 600)
-              //         SizedBox(height: 20),
-              //         Container(
-              //           width: double.infinity,
-              //           // color: Colors.red,
-              //           child: Wrap(
-              //             alignment: WrapAlignment.center,
-              //             runAlignment: WrapAlignment.center,
-              //             runSpacing: 20,
-              //             children: [
-              //               // if (MediaQuery.of(context).size.width > 600)
-              //               //   DailyStatusCard(
-              //               //     currentValue:
-              //               //         '${hasError ? '—' : f.format(currentItem.date)}',
-              //               //     title: "Dan",
-              //               //     showLineAbove: true,
-              //               //     color: Colors.transparent,
-              //               //     deltaTxt: hasError ? '' : f2.format(currentItem.date),
-              //               //   ),
-              //               DailyStatusCard(
-              //                 currentNumber: hasError ? null : currentItem.totalCases,
-              //                 title: 'Ukupno',
-              //                 color: totalColor,
-              //                 delta: hasError ? -1 : currentItem.deltaTotal,
-              //                 showLineAbove: true,
-              //               ),
-              //               DailyStatusCard(
-              //                 currentNumber: hasError ? null : currentItem.recoveries,
-              //                 title: 'Oporavljeni',
-              //                 color: recoveriesColor,
-              //                 delta: hasError ? -1 : currentItem.deltaRecoveries,
-              //                 showLineAbove: true,
-              //               ),
-              //               DailyStatusCard(
-              //                 currentNumber:
-              //                     hasError ? null : currentItem.activeCases,
-              //                 title: 'Aktivni',
-              //                 color: activeColor,
-              //                 delta: hasError ? -1 : currentItem.deltaActive,
-              //                 showLineAbove: true,
-              //               ),
-              //               DailyStatusCard(
-              //                 currentNumber: hasError ? null : currentItem.deaths,
-              //                 title: 'Umrli',
-              //                 color: deathsColor,
-              //                 delta: hasError ? -1 : currentItem.deltaDeaths,
-              //                 showLineAbove: true,
-              //               ),
-              //             ],
-              //           ),
-              //         ),
-
-              //       ],
-              //     ),
-              //   ),
-              //
-              // SizedBox(height: 16),
-
-              // SizedBox(height: 24),
-              // Text(
-              //   'Raspodjela slučajeva',
-              //   style: TextStyle(
-              //     fontSize: 20,
-              //   ),
-              // ),
-              // SizedBox(height: 16),
-              // DailyStats(item: currentItem),
-
               SizedBox(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
