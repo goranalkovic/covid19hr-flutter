@@ -1,6 +1,7 @@
 import 'package:covid19hr/data_loading.dart';
 import 'package:covid19hr/model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class Covid19Provider extends ChangeNotifier {
@@ -8,10 +9,12 @@ class Covid19Provider extends ChangeNotifier {
   List<CountyData> _countyRecords = [];
   bool _loading = false;
   String _county;
+  ThemeMode _themeMode = ThemeMode.system;
 
   List<GlobalDataRecord> get globalRecords => _globalRecords;
   List<CountyData> get countyRecords => _countyRecords;
   String get county => _county;
+  ThemeMode get themeMode => _themeMode;
 
   List<GenericDataRecord> get data {
     List<GenericDataRecord> tempList = [];
@@ -47,6 +50,11 @@ class Covid19Provider extends ChangeNotifier {
 
     _loading = false;
     HapticFeedback.lightImpact();
+    notifyListeners();
+  }
+
+  changeThemeMode(ThemeMode newMode) {
+    _themeMode = newMode;
     notifyListeners();
   }
 
