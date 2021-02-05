@@ -16,7 +16,6 @@ class TableViewSource extends DataTableSource {
 
   @override
   DataRow getRow(int index) {
-    // TODO: implement getRow
     return getTableViewRow(
       data[index],
       data.first.date,
