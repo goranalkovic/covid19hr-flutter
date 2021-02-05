@@ -7,10 +7,10 @@ import 'package:flutter/foundation.dart';
 
 Future<AppData> fetchData() async {
   try {
-    final response = await http.get(
-        'https://api.allorigins.win/get?url=https%3A%2F%2Fwww.koronavirus.hr%2Fjson%2F%3Faction%3Dpodaci');
-    final response2 = await http.get(
-        'https://api.allorigins.win/get?url=https%3A%2F%2Fwww.koronavirus.hr%2Fjson%2F%3Faction%3Dpo_danima_zupanijama');
+    final response = await http.get(Uri.parse(
+        'https://api.allorigins.win/get?url=https%3A%2F%2Fwww.koronavirus.hr%2Fjson%2F%3Faction%3Dpodaci'));
+    final response2 = await http.get(Uri.parse(
+        'https://api.allorigins.win/get?url=https%3A%2F%2Fwww.koronavirus.hr%2Fjson%2F%3Faction%3Dpo_danima_zupanijama'));
 
     // await Future.delayed(Duration(seconds: 10));
     final parsed = await compute(parseGlobalData, response.body);
