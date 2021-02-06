@@ -55,8 +55,6 @@ class DayStats extends StatelessWidget {
       ),
     ];
 
-    print(MediaQuery.of(context).size.width);
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
