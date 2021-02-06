@@ -294,34 +294,35 @@ class GenericChart extends HookWidget {
                                 constraints: BoxConstraints(
                                     maxWidth:
                                         (maxWidth - 80).clamp(100.0, 600.0)),
-                                child: Expanded(
-                                  child: ExpandableSlider(
-                                    min: 0,
-                                    max: data.length - 1.toDouble(),
-                                    value: currentIndex.value.toDouble(),
-                                    onChanged: (newValue) =>
-                                        currentIndex.value = newValue.toInt(),
-                                    onChangeStart: (_) {
-                                      showVerticalLine.value = true;
-                                    },
-                                    onChangeEnd: (_) {
-                                      showVerticalLine.value = false;
-                                    },
-                                    // divisions: data.length,
-                                    estimatedValueStep: 1,
-                                    snapCenterScrollCurve: Curves.decelerate,
-                                    expansionCurve: Curves.decelerate,
-                                    shrinkageCurve: Curves.decelerate,
-                                    // activeColor: Theme.of(context).dividerColor,
-                                    // inactiveColor: Theme.of(context).dividerColor,
-                                    expandsOnDoubleTap: true,
-                                    expandsOnScale: true,
-                                    expandsOnLongPress: true,
-                                    onShrinkageStart: () =>
-                                        sliderExpanded.value = false,
-                                    onExpansionStart: () =>
-                                        sliderExpanded.value = true,
-                                  ),
+                                child: ExpandableSlider(
+                                  min: 0,
+                                  max: data == null || data.length < 2
+                                      ? 1
+                                      : data.length - 1.toDouble(),
+                                  value: currentIndex.value.toDouble(),
+                                  onChanged: (newValue) =>
+                                      currentIndex.value = newValue.toInt(),
+                                  onChangeStart: (_) {
+                                    showVerticalLine.value = true;
+                                  },
+                                  onChangeEnd: (_) {
+                                    showVerticalLine.value = false;
+                                  },
+
+                                  // divisions: data.length,
+                                  estimatedValueStep: 1,
+                                  snapCenterScrollCurve: Curves.decelerate,
+                                  expansionCurve: Curves.decelerate,
+                                  shrinkageCurve: Curves.decelerate,
+                                  // activeColor: Theme.of(context).dividerColor,
+                                  // inactiveColor: Theme.of(context).dividerColor,
+                                  expandsOnDoubleTap: true,
+                                  expandsOnScale: true,
+                                  expandsOnLongPress: true,
+                                  onShrinkageStart: () =>
+                                      sliderExpanded.value = false,
+                                  onExpansionStart: () =>
+                                      sliderExpanded.value = true,
                                 ),
                               ),
                               AnimatedOpacity(
