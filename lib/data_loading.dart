@@ -3,38 +3,39 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:covid19hr/model.dart';
-import 'package:flutter/foundation.dart';
 
 Future<AppData> fetchData() async {
-  try {
-    final response = await http.get(Uri.parse(
-        'https://api.allorigins.win/get?url=https%3A%2F%2Fwww.koronavirus.hr%2Fjson%2F%3Faction%3Dpodaci'));
-    final response2 = await http.get(Uri.parse(
-        'https://api.allorigins.win/get?url=https%3A%2F%2Fwww.koronavirus.hr%2Fjson%2F%3Faction%3Dpo_danima_zupanijama'));
+  const String url1 = 'https://www.koronavirus.hr/json/?action=podaci';
+  const String url2 =
+      'https://www.koronavirus.hr/json/?action=po_danima_zupanijama';
+  const Map<String, String> headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS",
+    "Access-Control-Max-Age": "86400",
+    "Content-Type": "application/json",
+  };
 
-    // await Future.delayed(Duration(seconds: 10));
-    final parsed = await compute(parseGlobalData, response.body);
-    final parsed2 = await compute(parseCountyData, response2.body);
-    // final parsed = parseData(response.body);
-    return new AppData(
-      globalData: parsed,
-      countyData: parsed2,
-    ); // processData(parsed.reversed.toList());
-  } catch (e) {
-    return AppData();
-  }
+  final response = await http.get(Uri.parse(url1), headers: headers);
+  final response2 = await http.get(Uri.parse(url2), headers: headers);
+
+  // await Future.delayed(Duration(seconds: 10));
+  final parsed = parseGlobalData(response.body);
+  final parsed2 = parseCountyData(response2.body);
+  // final parsed = parseData(response.body);
+  return new AppData(
+    globalData: parsed,
+    countyData: parsed2,
+  ); // processData(parsed.reversed.toList());
 }
 
 List<CountyData> parseCountyData(String responseBody) {
-  final contents = jsonDecode(responseBody)['contents'];
-  final parsed = jsonDecode(contents).cast<Map<String, dynamic>>();
+  final parsed = jsonDecode(responseBody).cast<Map<String, dynamic>>();
 
   return parsed.map<CountyData>((json) => CountyData.fromJson(json)).toList();
 }
 
 List<GlobalDataRecord> parseGlobalData(String responseBody) {
-  final contents = jsonDecode(responseBody)['contents'];
-  final parsed = jsonDecode(contents).cast<Map<String, dynamic>>();
+  final parsed = jsonDecode(responseBody).cast<Map<String, dynamic>>();
 
   return parsed
       .map<GlobalDataRecord>((json) => GlobalDataRecord.fromJson(json))
@@ -42,6 +43,8 @@ List<GlobalDataRecord> parseGlobalData(String responseBody) {
 }
 
 List<GlobalDataRecord> processGlobalData(List<GlobalDataRecord> inputList) {
+  if (inputList == null) return [];
+
   final initialRecord = GlobalDataRecord(
     casesCroatia: 1,
     deathsCroatia: 0,
@@ -98,6 +101,8 @@ List<GlobalDataRecord> processGlobalData(List<GlobalDataRecord> inputList) {
 }
 
 List<CountyData> processCountyData(List<CountyData> inputList) {
+  if (inputList == null) return [];
+
   List<CountyData> newList = [];
 
   for (CountyData item in inputList.reversed) {
