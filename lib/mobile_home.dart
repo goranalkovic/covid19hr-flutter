@@ -8,8 +8,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_material_pickers/flutter_material_pickers.dart';
 
+import 'components/region_picker.dart';
 import 'components/settings_view.dart';
 import 'table_view.dart';
 
@@ -52,58 +52,7 @@ class MobileHome extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                OutlineButton(
-                  onPressed: () => showMaterialScrollPicker(
-                    context: context,
-                    title: 'Odaberite područje',
-                    confirmText: 'Odaberi',
-                    cancelText: 'Odustani',
-                    items: [
-                      'Hrvatska',
-                      ...counties.map((String c) => '$c županija'
-                          .replaceAll('županija županija', 'županija')
-                          .replaceAll('  ', ' ')
-                          .replaceAll('Grad Zagreb županija', 'Grad Zagreb'))
-                    ],
-                    selectedItem: provider.county ?? 'Hrvatska',
-                    showDivider: false,
-                    onChanged: (value) => value == 'Hrvatska'
-                        ? provider.setToGlobalData()
-                        : provider.changeCounty(value
-                            .replaceAll(' županija', '')
-                            .replaceAll('Zagrebačka', 'Zagrebačka ')
-                            .replaceAll('Krapinsko-zagorska',
-                                'Krapinsko-zagorska županija')),
-                    headerColor: Theme.of(context).accentColor,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        FluentIcons.location_24_regular,
-                        color: Theme.of(context).accentColor,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        provider.county == null
-                            ? 'Hrvatska'
-                            : '${provider.county}'
-                                .replaceAll('Grad Zagreb', 'Grad Zagreb')
-                                .replaceAll(
-                                    'Zagrebačka  ', 'Zagrebačka županija'),
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 15,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).accentColor.withOpacity(0.2)),
-                ),
+                RegionPicker(provider: provider),
                 RaisedButton(
                   elevation: 0,
                   disabledElevation: 0,

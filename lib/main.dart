@@ -10,15 +10,15 @@ import 'package:covid19hr/styles.dart';
 import 'package:covid19hr/table_view.dart';
 import 'package:covid19hr/titled_card.dart';
 import 'package:covid19hr/ui_blocks/day_summary.dart';
-import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_material_pickers/flutter_material_pickers.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
+
+import 'components/region_picker.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -187,60 +187,7 @@ class MainScreen extends StatelessWidget {
                     runSpacing: 14,
                     children: [
                       AppTitle(isHuge: true),
-                      OutlineButton(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        highlightedBorderColor: Theme.of(context).accentColor,
-                        onPressed: () => showMaterialScrollPicker(
-                          context: context,
-                          title: 'Odaberite područje',
-                          confirmText: 'Odaberi',
-                          cancelText: 'Odustani',
-                          items: [
-                            'Hrvatska',
-                            ...counties.map((String c) => '$c županija'
-                                .replaceAll('županija županija', 'županija')
-                                .replaceAll('  ', ' ')
-                                .replaceAll(
-                                    'Grad Zagreb županija', 'Grad Zagreb'))
-                          ],
-                          selectedItem: provider.county ?? 'Hrvatska',
-                          showDivider: false,
-                          onChanged: (value) => value == 'Hrvatska'
-                              ? provider.setToGlobalData()
-                              : provider.changeCounty(value
-                                  .replaceAll(' županija', '')
-                                  .replaceAll('Zagrebačka', 'Zagrebačka ')
-                                  .replaceAll('Krapinsko-zagorska',
-                                      'Krapinsko-zagorska županija')),
-                          headerColor: Theme.of(context).accentColor,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              FluentIcons.globe_location_24_regular,
-                              color: Theme.of(context).accentColor,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              provider.county == null
-                                  ? 'Hrvatska'
-                                  : '${provider.county} županija'
-                                      .replaceAll(
-                                          'Grad Zagreb županija', 'Grad Zagreb')
-                                      .replaceAll('Zagrebačka  županija',
-                                          'Zagrebačka županija'),
-                              style: TextStyle(
-                                fontFamily: 'DMSans',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                            SizedBox(width: 2),
-                          ],
-                        ),
-                      ),
+                      RegionPicker(provider: provider),
                     ],
                   ),
                 ),
