@@ -292,14 +292,16 @@ class GenericChart extends HookWidget {
                               ),
                               ConstrainedBox(
                                 constraints: BoxConstraints(
-                                    maxWidth:
-                                        (maxWidth - 80).clamp(100.0, 600.0)),
+                                  maxWidth: (maxWidth - 80).clamp(100.0, 600.0),
+                                ),
                                 child: ExpandableSlider(
                                   min: 0,
                                   max: data == null || data.length < 2
                                       ? 1
                                       : data.length - 1.toDouble(),
-                                  value: currentIndex.value.toDouble(),
+                                  value: currentIndex.value
+                                      .toDouble()
+                                      .clamp(0.0, 1000000),
                                   onChanged: (newValue) =>
                                       currentIndex.value = newValue.toInt(),
                                   onChangeStart: (_) {
