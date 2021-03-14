@@ -45,111 +45,170 @@ class TableView extends StatelessWidget {
 
     NumberFormat formatter = NumberFormat('###,###,###');
 
-    return AnimatedCrossFade(
-      crossFadeState: provider.loading || provider.data.isEmpty
-          ? CrossFadeState.showFirst
-          : CrossFadeState.showSecond,
-      duration: Duration(milliseconds: 300),
-      firstChild: Shimmer(
-        child: SizedBox(height: 320, width: double.infinity),
-      ),
-      secondChild: ListView.builder(
-        padding: const EdgeInsets.all(0),
-        primary: false,
-        itemCount: data.length,
-        shrinkWrap: true,
-        reverse: false,
-        physics: BouncingScrollPhysics(),
-        itemBuilder: (context, index) {
-          final dataItem = data.reversed.toList()[index];
+    TextStyle tableHeaderStyle = TextStyle(
+      fontSize: 14,
+    );
 
-          return Container(
-            color: index % 2 == 0
-                ? Theme.of(context).dividerColor.withOpacity(0.02)
-                : Colors.transparent,
-            padding: const EdgeInsets.symmetric(
-              vertical: 8.0,
-              horizontal: 18.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: 8.0,
+            horizontal: 18.0,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
                   width: 68,
                   child: Text(
-                    DateFormat("d. M.").format(dataItem.date),
-                    style: tableItem,
-                  ),
-                ),
-                SizedBox(
+                    'Datum',
+                    style: tableHeaderStyle,
+                  )),
+              SizedBox(
                   width: 84,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formatter.format(dataItem.totalCases),
-                        style: tableItem.copyWith(fontSize: 15),
-                      ),
-                      Text(
-                        dataItem.deltaTotalDisplay,
-                        style: tableItemFooter,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
+                  child: Text(
+                    'Ukupno',
+                    style: tableHeaderStyle,
+                  )),
+              SizedBox(
                   width: 84,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formatter.format(dataItem.recoveries),
-                        style: tableItem,
-                      ),
-                      Text(
-                        dataItem.deltaRecoveriesDisplay,
-                        style: tableItemFooter,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
+                  child: Text(
+                    'Oporavljeni',
+                    style: tableHeaderStyle,
+                  )),
+              SizedBox(
                   width: 84,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formatter.format(dataItem.activeCases),
-                        style: tableItem,
-                      ),
-                      Text(
-                        dataItem.deltaActiveDisplay,
-                        style: tableItemFooter,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
+                  child: Text(
+                    'Umrli',
+                    style: tableHeaderStyle,
+                  )),
+              SizedBox(
                   width: 84,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formatter.format(dataItem.deaths),
-                        style: tableItem,
-                      ),
-                      Text(
-                        dataItem.deltaDeathsDisplay,
-                        style: tableItemFooter,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                  child: Text(
+                    'Aktivni',
+                    style: tableHeaderStyle,
+                  )),
+            ],
+          ),
+        ),
+        Container(
+          height: 1,
+          width: double.infinity,
+          color: contrastingColor.withOpacity(0.1),
+        ),
+        Expanded(
+          child: AnimatedCrossFade(
+            crossFadeState: provider.loading || provider.data.isEmpty
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            duration: Duration(milliseconds: 300),
+            firstChild: Shimmer(
+              child: SizedBox(height: 320, width: double.infinity),
             ),
-          );
-        },
-      ),
+            secondChild: ListView.builder(
+              padding: const EdgeInsets.all(0),
+              primary: false,
+              itemCount: data.length,
+              shrinkWrap: true,
+              reverse: false,
+              physics: BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                final dataItem = data.reversed.toList()[index];
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: index % 2 == 0
+                        ? Theme.of(context).dividerColor.withOpacity(0.02)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: 18.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: 68,
+                        child: Text(
+                          DateFormat("d. M.").format(dataItem.date),
+                          style: tableItem,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 84,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              formatter.format(dataItem.totalCases),
+                              style: tableItem.copyWith(fontSize: 15),
+                            ),
+                            Text(
+                              dataItem.deltaTotalDisplay,
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 84,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              formatter.format(dataItem.recoveries),
+                              style: tableItem,
+                            ),
+                            Text(
+                              dataItem.deltaRecoveriesDisplay,
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 84,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              formatter.format(dataItem.deaths),
+                              style: tableItem,
+                            ),
+                            Text(
+                              dataItem.deltaDeathsDisplay,
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 84,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              formatter.format(dataItem.activeCases),
+                              style: tableItem,
+                            ),
+                            Text(
+                              dataItem.deltaActiveDisplay,
+                              style: tableItemFooter,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

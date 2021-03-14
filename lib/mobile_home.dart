@@ -1,4 +1,6 @@
-import 'dart:ui';
+import 'dart:io';
+
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:covid19hr/app_logo.dart';
 import 'package:covid19hr/appstate.dart';
 import 'package:covid19hr/generic_chart.dart';
@@ -7,10 +9,13 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'components/region_picker.dart';
 import 'components/settings_view.dart';
+import 'components/window_buttons.dart';
+import 'styles.dart';
 import 'table_view.dart';
 
 class MobileHome extends StatelessWidget {
@@ -30,6 +35,7 @@ class MobileHome extends StatelessWidget {
       deathsTest[item.date] = item.deathsCroatia.toDouble();
     }
 
+    bool isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
     // var currDate = provider.county == null
     //     ? provider.globalRecords.last.date ?? DateTime.now()
     //     : provider.countyRecords.last.date ?? DateTime.now();
@@ -89,9 +95,27 @@ class MobileHome extends StatelessWidget {
         ),
         // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         appBar: AppBar(
+          titleSpacing: 10,
           automaticallyImplyLeading: false,
-          title: AppTitle(isLarge: true),
-          centerTitle: true,
+          title: isDesktop
+              ? WindowTitleBarBox(
+                  child: Row(
+                    children: [
+                      Expanded(
+                          child:
+                              MoveWindow(child: AppTitle(isLarge: !isDesktop))),
+                      LastUpdateIndicator(provider: provider),
+                      WindowButtons(),
+                    ],
+                  ),
+                )
+              : Row(
+                  children: [
+                    Expanded(child: AppTitle(isLarge: true)),
+                    LastUpdateIndicator(provider: provider),
+                  ],
+                ),
+          centerTitle: !isDesktop,
           elevation: 2,
           shadowColor: Theme.of(context).shadowColor.withOpacity(0.2),
           bottom: TabBar(
@@ -137,6 +161,40 @@ class MobileHome extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class LastUpdateIndicator extends StatelessWidget {
+  const LastUpdateIndicator({
+    Key key,
+    @required this.provider,
+  }) : super(key: key);
+
+  final Covid19Provider provider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          FluentIcons.calendar_ltr_16_regular,
+          size: 16,
+          color: contrastingColor.withOpacity(0.7),
+        ),
+        SizedBox(width: 4),
+        Text(
+          DateFormat("d. M.").format(provider.data.last.date),
+          style: TextStyle(
+            fontSize: 12,
+            color: contrastingColor.withOpacity(0.7),
+            fontFamily: Theme.of(context).textTheme.bodyText1.fontFamily,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        SizedBox(width: 4),
+      ],
     );
   }
 }

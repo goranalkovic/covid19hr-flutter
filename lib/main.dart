@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:covid19hr/app_logo.dart';
 import 'package:covid19hr/appstate.dart';
 import 'package:covid19hr/footer.dart';
@@ -18,16 +19,19 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
 
-import 'components/region_picker.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // if (!kIsWeb) {
-  //   if (Platform.isAndroid) await InfinityUi.enable();
-  // }
   final savedThemeMode = await AdaptiveTheme.getThemeMode();
 
   runApp(MyApp(savedThemeMode: savedThemeMode));
+
+  doWhenWindowReady(() {
+    final initialSize = Size(890, 648);
+    appWindow.minSize = Size(480, 640);
+    appWindow.size = initialSize;
+    appWindow.alignment = Alignment.center;
+    appWindow.show();
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -135,93 +139,29 @@ class HomePage extends StatelessWidget {
     recoveriesColor = isDark ? recoveriesColorDark : recoveriesColorLight;
     deathsColor = isDark ? deathsColorDark : deathsColorLight;
     activeColor = isDark ? activeColorDark : activeColorLight;
+    contrastingColor = isDark ? contrastingColorDark : contrastingColorLight;
+
+    buttonColors = WindowButtonColors(
+      iconNormal: contrastingColor.withOpacity(0.75),
+      mouseOver: contrastingColor.withOpacity(0.1),
+      mouseDown: contrastingColor.withOpacity(0.15),
+      iconMouseOver: activeColor,
+      iconMouseDown: activeColor,
+    );
+
+    closeButtonColors = WindowButtonColors(
+      mouseOver: Color(0xFFD32F2F),
+      mouseDown: Color(0xFFB71C1C),
+      iconNormal: contrastingColor.withOpacity(0.75),
+      iconMouseOver: Colors.white,
+    );
 
     bool isWide = MediaQuery.of(context).size.width > 800;
 
-    return isWide ? DesktopHome() : MobileHome();
-
-    // ChangeNotifierProvider(
-    //   create: (_) => Covid19Provider(),
-    //   child: MainScreen(),
-    // );
-  }
-}
-
-class MainScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<Covid19Provider>();
-
-    Map<DateTime, double> totalCasesTest = {};
-    Map<DateTime, double> activeCasesTest = {};
-    Map<DateTime, double> recoveriesTest = {};
-    Map<DateTime, double> deathsTest = {};
-
-    for (var item in provider.globalRecords) {
-      totalCasesTest[item.date] = item.casesCroatia.toDouble();
-      activeCasesTest[item.date] = item.activeCroatia.toDouble();
-      recoveriesTest[item.date] = item.recoveriesCroatia.toDouble();
-      deathsTest[item.date] = item.deathsCroatia.toDouble();
+    if (isWide) {
+      return DesktopHome();
+    } else {
+      return MobileHome();
     }
-
-    return RefreshIndicator(
-      displacement: 80,
-      onRefresh: () => provider.updateData(),
-      child: CustomScrollView(
-        physics: BouncingScrollPhysics(),
-        slivers: [
-          SliverList(
-            delegate: SliverChildListDelegate.fixed(
-              [
-                if (!kIsWeb)
-                  if (Platform.isAndroid)
-                    SizedBox(
-                      height: MediaQuery.of(context).viewPadding.top,
-                    ),
-                Container(
-                  padding: const EdgeInsets.only(top: 32, left: 32, right: 32),
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    runAlignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    runSpacing: 14,
-                    children: [
-                      AppTitle(isHuge: true),
-                      RegionPicker(provider: provider),
-                    ],
-                  ),
-                ),
-                DaySummary(),
-                OutlineButton(
-                  child: Text('New layout'),
-                  onPressed: () => Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (_) => MobileHome())),
-                ),
-
-                TitledCard(
-                  child: GenericChart(),
-                  maxWidth: MediaQuery.of(context).size.width * 0.6,
-                ),
-                // TitledCard(
-                //   title: 'Podjela slučajeva',
-                //   child: Center(child: DailyStats()),
-                // ),
-                TitledCard(
-                  title: 'Tablični prikaz',
-                  child: TableView(),
-                ),
-                Footer(),
-                SizedBox(height: 12.0),
-                if (!kIsWeb)
-                  if (Platform.isAndroid)
-                    SizedBox(
-                      height: MediaQuery.of(context).viewPadding.bottom,
-                    ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

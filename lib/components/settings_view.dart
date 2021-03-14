@@ -26,7 +26,7 @@ class SettingsView extends StatelessWidget {
               fontSize: 22,
             ),
           ),
-          subtitle: Text('verzija 1.0'),
+          subtitle: Text('verzija 1.1'),
         ),
         SizedBox(height: 4),
         ListTile(

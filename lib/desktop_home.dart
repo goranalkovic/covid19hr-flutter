@@ -1,17 +1,23 @@
-import 'dart:ui';
+import 'dart:io';
+import 'dart:math';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:covid19hr/app_logo.dart';
 import 'package:covid19hr/appstate.dart';
+import 'package:covid19hr/components/custom_window_button.dart';
 import 'package:covid19hr/generic_chart.dart';
 import 'package:covid19hr/ui_blocks/day_summary.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import 'components/region_picker.dart';
 import 'components/settings_view.dart';
+import 'components/window_buttons.dart';
+import 'styles.dart';
 import 'table_view.dart';
 
 class DesktopHome extends HookWidget {
@@ -35,6 +41,131 @@ class DesktopHome extends HookWidget {
 
     var scrollControl = useScrollController(keepScrollOffset: true);
 
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    Function showSettings = () {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return ChangeNotifierProvider(
+              create: (_) => Covid19Provider(),
+              child: AlertDialog(
+                titlePadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                content: SizedBox(
+                  width: screenWidth.clamp(400.0, 560.0),
+                  height: (screenHeight * 0.8).clamp(300.0, 460.0),
+                  child: SettingsView(),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('Zatvori'),
+                  ),
+                ],
+              ),
+            );
+          });
+    };
+
+    Function showDayView = () {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return ChangeNotifierProvider(
+              create: (_) => Covid19Provider(),
+              child: AlertDialog(
+                title: Text('Podaci po danima'),
+                titlePadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                content: SizedBox(
+                  width: screenWidth.clamp(400.0, 560.0),
+                  height: (screenHeight * 0.8).clamp(300.0, 460.0),
+                  child: TableView(),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('Zatvori'),
+                  ),
+                ],
+              ),
+            );
+          });
+    };
+
+    Function showRegionPicker = () {
+      List<String> items = [
+        'Hrvatska',
+        ...counties.map((String c) => '$c županija'
+            .replaceAll('županija županija', 'županija')
+            .replaceAll('  ', ' ')
+            .replaceAll('Grad Zagreb županija', 'Grad Zagreb'))
+      ];
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Regija'),
+            titlePadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+            content: SizedBox(
+              width: screenWidth.clamp(400.0, 560.0),
+              height: (screenHeight * 0.8).clamp(300.0, 460.0),
+              child: ListView.builder(
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  String selectedItem = provider.county ?? 'Hrvatska';
+                  String item = items.elementAt(index);
+
+                  String filteredItem = item
+                      .replaceAll(' županija', '')
+                      .replaceAll('Zagrebačka', 'Zagrebačka ');
+                  return ListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    enableFeedback: true,
+                    trailing: selectedItem == filteredItem
+                        ? Icon(FluentIcons.checkbox_checked_24_regular)
+                        : null,
+                    title: Text(item),
+                    onTap: item == selectedItem
+                        ? null
+                        : () {
+                            if (item == 'Hrvatska') {
+                              provider.setToGlobalData();
+                            } else {
+                              provider.changeCounty(
+                                item
+                                    .replaceAll(' županija', '')
+                                    .replaceAll('Zagrebačka', 'Zagrebačka '),
+                              );
+                            }
+
+                            Navigator.of(context).pop();
+                          },
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Odustani'),
+              ),
+            ],
+          );
+        },
+      );
+    };
+
     void _scrollCallback() {
       shrinkTopItems.value = scrollControl.offset > 1;
     }
@@ -44,153 +175,86 @@ class DesktopHome extends HookWidget {
       return () => scrollControl.removeListener(_scrollCallback);
     }, [scrollControl]);
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: AppTitle(isLarge: true),
-        centerTitle: true,
-        elevation: 2,
-        shadowColor: Theme.of(context).shadowColor.withOpacity(0.2),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(48.0),
-          child: Container(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                RegionPicker(provider: provider),
-                Row(
-                  children: [
-                    OutlineButton(
-                      onPressed: () => showDialog(
-                          context: context,
-                          builder: (context) {
-                            return ChangeNotifierProvider(
-                              create: (_) => Covid19Provider(),
-                              child: AlertDialog(
-                                title: Text('Podaci po danima'),
-                                content: SizedBox(
-                                  width: 600,
-                                  height: 500,
-                                  child: TableView(),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: Text('Zatvori'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                      child: Row(
-                        children: [
-                          Icon(
-                            FluentIcons.timeline_24_regular,
-                            color: Theme.of(context).accentColor,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'Po danima',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 14,
-                        horizontal: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      borderSide: BorderSide(
-                          color:
-                              Theme.of(context).accentColor.withOpacity(0.2)),
-                    ),
-                    SizedBox(width: 8),
-                    OutlineButton(
-                      onPressed: () => showDialog(
-                          context: context,
-                          builder: (context) {
-                            return ChangeNotifierProvider(
-                              create: (_) => Covid19Provider(),
-                              child: AlertDialog(
-                                content: SizedBox(
-                                  width: 500,
-                                  height: 450,
-                                  child: SettingsView(),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: Text('Zatvori'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                      child: Row(
-                        children: [
-                          Icon(
-                            FluentIcons.settings_24_regular,
-                            color: Theme.of(context).accentColor,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'Postavke',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 14,
-                        horizontal: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      borderSide: BorderSide(
-                          color:
-                              Theme.of(context).accentColor.withOpacity(0.2)),
-                    ),
-                  ],
-                ),
-                RaisedButton(
-                  elevation: 0,
-                  disabledElevation: 0,
-                  color: Theme.of(context).accentColor,
-                  textColor: Colors.white,
-                  onPressed:
-                      provider.loading ? null : () => provider.updateData(),
-                  child: Row(
-                    children: [
-                      Icon(
-                        FluentIcons.arrow_counterclockwise_24_regular,
-                        // color: Theme.of(context).accentColor,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Osvježi podatke',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 15,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  // borderSide: BorderSide(
-                  //     color: Theme.of(context).accentColor.withOpacity(0.2)),
-                ),
-              ],
+    bool isDesktop =
+        !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+
+    List<Widget> titleBarActions = [
+      Expanded(child: MoveWindow(child: AppTitle())),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            FluentIcons.location_16_regular,
+            size: 16,
+            color: contrastingColor.withOpacity(0.7),
+          ),
+          SizedBox(width: 4),
+          Text(
+            provider.county ?? 'Hrvatska',
+            style: TextStyle(
+              fontSize: 12,
+              color: contrastingColor.withOpacity(0.7),
+              fontFamily: Theme.of(context).textTheme.bodyText1.fontFamily,
+              fontWeight: FontWeight.w400,
             ),
           ),
-        ),
+          SizedBox(width: 12),
+          Icon(
+            FluentIcons.calendar_ltr_16_regular,
+            size: 16,
+            color: contrastingColor.withOpacity(0.7),
+          ),
+          SizedBox(width: 4),
+          Text(
+            DateFormat("d. M. HH:mm").format(provider.data.last.date),
+            style: TextStyle(
+              fontSize: 12,
+              color: contrastingColor.withOpacity(0.7),
+              fontFamily: Theme.of(context).textTheme.bodyText1.fontFamily,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+      SizedBox(width: 10),
+      TitleBarSeparator(),
+      CustomWindowButton(
+        icon: FluentIcons.arrow_clockwise_20_regular,
+        onPressed: provider.loading ? null : () => provider.updateData(),
+      ),
+      CustomWindowButton(
+        icon: FluentIcons.location_20_regular,
+        onPressed: showRegionPicker,
+      ),
+      CustomWindowButton(
+        icon: FluentIcons.apps_list_20_regular,
+        onPressed: showDayView,
+      ),
+      CustomWindowButton(
+        icon: FluentIcons.settings_20_regular,
+        onPressed: showSettings,
+      ),
+      WindowButtons(),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 10,
+        automaticallyImplyLeading: false,
+        title: isDesktop
+            ? WindowTitleBarBox(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: titleBarActions,
+                ),
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: titleBarActions,
+              ),
+        centerTitle: !isDesktop,
+        elevation: 2,
+        shadowColor: Theme.of(context).shadowColor.withOpacity(0.2),
       ),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
@@ -202,6 +266,22 @@ class DesktopHome extends HookWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class TitleBarSeparator extends StatelessWidget {
+  const TitleBarSeparator({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 20,
+      width: 1,
+      color: buttonColors.iconNormal.withOpacity(0.2),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }

@@ -4,14 +4,28 @@ import 'package:flutter/material.dart';
 class AppTitle extends StatelessWidget {
   final bool isLarge;
   final bool isHuge;
+  final bool iconOnly;
   const AppTitle({
     Key key,
     this.isLarge = false,
     this.isHuge = false,
+    this.iconOnly = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    if (iconOnly) {
+      return Icon(
+        Icons.flare_rounded,
+        color: Theme.of(context).accentColor,
+        size: isHuge
+            ? 30
+            : isLarge
+                ? 24
+                : 18,
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
