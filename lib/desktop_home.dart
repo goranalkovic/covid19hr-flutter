@@ -206,7 +206,7 @@ class DesktopHome extends HookWidget {
           ),
           SizedBox(width: 4),
           Text(
-            DateFormat("d. M. HH:mm").format(provider.data.last.date),
+            DateFormat("d. M. H:mm").format(provider.data.last.date),
             style: TextStyle(
               fontSize: 12,
               color: contrastingColor.withOpacity(0.7),

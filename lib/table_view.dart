@@ -39,8 +39,6 @@ class TableView extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<Covid19Provider>();
 
-    final data = provider.data;
-
     // final firstDate = provider.globalRecords.first.date;
 
     NumberFormat formatter = NumberFormat('###,###,###');
@@ -109,12 +107,12 @@ class TableView extends StatelessWidget {
             secondChild: ListView.builder(
               padding: const EdgeInsets.all(0),
               primary: false,
-              itemCount: data.length,
+              itemCount: provider.data.length,
               shrinkWrap: true,
               reverse: false,
               physics: BouncingScrollPhysics(),
               itemBuilder: (context, index) {
-                final dataItem = data.reversed.toList()[index];
+                final dataItem = provider.data.reversed.toList()[index];
 
                 return Container(
                   decoration: BoxDecoration(
