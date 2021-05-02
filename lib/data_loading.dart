@@ -5,9 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:covid19hr/model.dart';
 
 Future<AppData> fetchData() async {
-  const String url1 = 'https://www.koronavirus.hr/json/?action=podaci';
+  const String url1 =
+      'https://covid19hr-proxy.goranalkovic.workers.dev/?https://koronavirus.hr/json/?action=podaci';
   const String url2 =
-      'https://www.koronavirus.hr/json/?action=po_danima_zupanijama';
+      'https://covid19hr-proxy.goranalkovic.workers.dev/?https://koronavirus.hr/json/?action=po_danima_zupanijama';
+
   const Map<String, String> headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS",
@@ -25,7 +27,7 @@ Future<AppData> fetchData() async {
   return new AppData(
     globalData: parsed,
     countyData: parsed2,
-  ); // processData(parsed.reversed.toList());
+  );
 }
 
 List<CountyData> parseCountyData(String responseBody) {
