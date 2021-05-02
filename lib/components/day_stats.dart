@@ -29,7 +29,7 @@ class DayStats extends StatelessWidget {
       getCurrentDataRowItem(
         context,
         'Oporavljeni',
-        item?.totalCases,
+        item?.recoveries,
         item?.deltaRecoveries,
         recoveriesColor,
         isCollapsed: isCollapsed,
