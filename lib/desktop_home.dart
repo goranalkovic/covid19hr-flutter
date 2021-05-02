@@ -205,15 +205,16 @@ class DesktopHome extends HookWidget {
             color: contrastingColor.withOpacity(0.7),
           ),
           SizedBox(width: 4),
-          Text(
-            DateFormat("d. M. H:mm").format(provider.data.last.date),
-            style: TextStyle(
-              fontSize: 12,
-              color: contrastingColor.withOpacity(0.7),
-              fontFamily: Theme.of(context).textTheme.bodyText1.fontFamily,
-              fontWeight: FontWeight.w400,
+          if (provider.data != null && provider.data.isNotEmpty)
+            Text(
+              DateFormat("d. M. H:mm").format(provider.data.last.date),
+              style: TextStyle(
+                fontSize: 12,
+                color: contrastingColor.withOpacity(0.7),
+                fontFamily: Theme.of(context).textTheme.bodyText1.fontFamily,
+                fontWeight: FontWeight.w400,
+              ),
             ),
-          ),
         ],
       ),
       SizedBox(width: 10),
